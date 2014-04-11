@@ -17,7 +17,7 @@ It's easy to set up
    --direction : Scroll direction, currently supported direction is UP. Default is UP<br/>
    --interval  : The time interval to scroll from start to end number in milliseconds. Default is 5 seconds<br/>
    --width     : The scroller panel width in px. Default is 400px<br/>
-   --amount    : The amount of px to scroll for each number,e.g 0->1,1->2,2->3......Default is 0<br/>
+   --amount    : The amount of px to scroll for each number,e.g 0->1,1->2,2->3......Default is 250px<br/>
    You can omit one or all the properties above. The default value is used if the property is not specified
    
 3. Start the scroller by calling scroller.start(number); Here number is the initial number to start, e.g 100
