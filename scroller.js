@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014, PixelsTech, All rights reserved
+ *  Copyright (c) 2014, Pi Ke, All rights reserved
  *  
  *  This is a free software
  *
