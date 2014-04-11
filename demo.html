@@ -6,8 +6,11 @@
 </head>
 <body>
 <h1>Scroller demo page</h1>
-
+<h2>Random number pane demo</h2>
 <div id="scroller-pane">
+</div>
+<h2>Clock pane demo</h2>
+<div id="clock-pane">
 </div>
 <script type="text/javascript" src="scroller.js"></script>
 <script type="text/javascript">
@@ -16,7 +19,8 @@ var scroller=Scroller.getNewInstance({
 	interval:3000,
 	width:200,
 	amount:50,
-	thousandSeperator:","
+	seperatorType:Scroller.SEPERATOR.THOUSAND,
+	seperator:"-"
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green",color:"red"});
 
@@ -24,9 +28,30 @@ scroller.start(1000);
 //scroller.scrollTo(19);
 setInterval(function(){
 	var num=Math.floor(Math.random()*1000000000);
-	console.log(num);
 	scroller.scrollTo(num);
 },5000);
+
+var clockScroller=Scroller.getNewInstance({
+	width:200,
+	amount:40,
+	interval:800,
+	seperatorType:Scroller.SEPERATOR.TIME,
+	seperator:":"
+});
+clockScroller.appendTo(document.getElementById("clock-pane"));
+clockScroller.start("000000");
+setInterval(function(){
+	var now=new Date();
+	var hours=now.getHours();
+	var minutes=now.getMinutes();
+	var seconds=now.getSeconds();
+
+	hours=(hours<10)?"0"+hours:hours+"";
+	minutes=(minutes<10)?"0"+minutes:minutes+"";
+	seconds=(seconds<10)?"0"+seconds:seconds+"";
+	var timeStr=hours+minutes+seconds;
+	clockScroller.scrollTo(hours+minutes+seconds);
+},1000);
 </script>
 </body>
 </html>
