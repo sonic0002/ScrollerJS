@@ -15,13 +15,17 @@ var scroller=Scroller.getNewInstance({
 	direction:Scroller.DIRECTION.UP,
 	interval:3000,
 	width:200,
-	amount:80
+	amount:50,
+	thousandSeperator:","
 });
-scroller.appendTo(document.getElementById("scroller-pane"));
+scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green",color:"red"});
 
-scroller.start(100);
+scroller.start(1000);
+//scroller.scrollTo(19);
 setInterval(function(){
-	scroller.scrollTo(Math.floor(Math.random()*1000000000));
+	var num=Math.floor(Math.random()*1000000000);
+	console.log(num);
+	scroller.scrollTo(num);
 },5000);
 </script>
 </body>
