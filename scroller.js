@@ -114,6 +114,7 @@
 			this.table=null;
 			this.beginNum=0;
 			this.endNum=0;
+			this.css=null;
 			this.init(0,0);
 		}
 
@@ -152,6 +153,9 @@
 				this.table=document.createElement("table");
 				this.table.className="scroller-table";
 				this.table.setAttribute("style","margin:auto;");
+				if(this.css!=null){
+					this.setStyle(this.css);
+				}
 				var tr=document.createElement("tr");
 				var indWidth=Math.floor(this.props.width/maxLength);
 				var thousandSeperatorCount = 4-maxLength%3;
@@ -189,17 +193,17 @@
 				parent.appendChild(this.scrollPane);
 				return this;
 			},
+			//Here style should be JavaScript format
 			setStyle:function(css){
+				this.css=css;
 				if(typeof css === "string"){
 					var entries = css.split(";");
-					var newStyle = "";
 					for(var i in entries){
 						var pair=entries[i].split(":");
 						var key=pair[0];
 						var value=(pair.length==2)?pair[1]:"";
 
 						if(!this.isUnmodifiableStyle(key)){
-							newStyle+=entries[i]+";";
 							this.table.style[key]=value;
 						}					
 					}
