@@ -73,7 +73,6 @@
 			this.scrolledAmount=0;
 		},
 		iterate:function(){
-			//console.log(this.nextNum);
 			if(this.nextNum!=this.endNum){
 				if(this.nextNum==9){
 					this.nextNum=0;
@@ -151,9 +150,11 @@
 
 				//Start building UI
 				this.table=document.createElement("table");
+				this.table.className="scroller-table";
 				this.table.setAttribute("style","margin:auto;");
 				var tr=document.createElement("tr");
 				var indWidth=Math.floor(this.props.width/maxLength);
+				var thousandSeperatorCount = 4-maxLength%3;
 				for(var i=0;i<maxLength;++i){
 					var td=document.createElement("td");
 					
@@ -166,6 +167,16 @@
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
 					tr.appendChild(td);
+
+					if((i+thousandSeperatorCount)%3===0&&(i+1)<maxLength&&this.props.thousandSeperator!==""){
+						var td=document.createElement("td");
+						var span=document.createElement("span");
+						span.className="scroller-span";
+						span.innerHTML=this.props.thousandSeperator;
+						span.setAttribute("style","height:"+this.height+"px;left:0px;");
+						td.appendChild(span);
+						tr.appendChild(td);
+					}
 				}
 				this.table.appendChild(tr);
 				this.scrollPane.appendChild(this.table);
@@ -220,9 +231,11 @@
 				}else{
 					count=number.trim().replace(/,/g,"");
 				}
-				if(count.length!=this.oldCountArray.length){
-					this.init(this.beginNum,parseInt(count));
+				if(count.length!=this.newCountArray.length){
+					this.init(this.endNum,parseInt(count));
 				}else{
+					this.beginNum=this.endNum;
+					this.oldCountArray=this.newCountArray;
 					this.endNum=parseInt(count);
 					this.newCountArray=[];
 					for(var i=0,len=count.length;i<len;++i){
@@ -239,10 +252,11 @@
 				}else{
 					count=from.trim().replace(/,/g,"");
 				}
-				this.beginNum=parseInt(count);
-				this.oldCountArray=[];
+				this.endNum=parseInt(count);  //this.endNum will be assigned to this.beginNum
+				                              //in scrollTo() method.
+				this.newCountArray=[];
 				for(var i=0,len=count.length;i<len;++i){
-					this.oldCountArray.push(count.charAt(i));
+					this.newCountArray.push(count.charAt(i));
 				}
 
 				this.scrollTo(to);
@@ -277,11 +291,12 @@
 				numOfComponent++;
 
 				//Sanitize properties
-				props           = props || {};
-				props.direction = props.direction || Scroller.DIRECTION.UP;
-				props.interval  = props.interval || 5000;
-				props.width     = props.width || 400;
-				props.amount    = props.amount || 250;
+				props                   = props || {};
+				props.direction         = props.direction || Scroller.DIRECTION.UP;
+				props.interval          = props.interval || 5000;
+				props.width             = props.width || 400;
+				props.amount            = props.amount || 250;
+				props.thousandSeperator = props.thousandSeperator || "";
 
 				return new ScrollerImpl(props);
 			},
