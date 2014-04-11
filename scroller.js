@@ -179,7 +179,6 @@
 				return this;
 			},
 			setStyle:function(css){
-				console.log("this table"+this.table);
 				if(typeof css === "string"){
 					var entries = css.split(";");
 					var newStyle = "";
