@@ -1,0 +1,28 @@
+<html>
+<head>
+<title>Scroller demo</title>
+<link rel="stylesheet" type="text/css" href="scroller.css" />
+
+</head>
+<body>
+<h1>Scroller demo page</h1>
+
+<div id="scroller-pane">
+</div>
+<script type="text/javascript" src="scroller.js"></script>
+<script type="text/javascript">
+var scroller=Scroller.getNewInstance({
+	direction:Scroller.DIRECTION.UP,
+	interval:3000,
+	width:200,
+	amount:80
+});
+scroller.appendTo(document.getElementById("scroller-pane"));
+
+scroller.start(100);
+setInterval(function(){
+	scroller.scrollTo(Math.floor(Math.random()*1000000000));
+},5000);
+</script>
+</body>
+</html>
