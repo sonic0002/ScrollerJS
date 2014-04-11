@@ -12,14 +12,16 @@ It's easy to set up
   	interval:3000,
   	width:200,
   	amount:80,
-   thousandSeperator:","
+   seperatorType:Scroller.SEPERATOR.THOUSAND,
+   seperator:","
    });
 
    --direction : Scroll direction, currently supported direction is UP. Default is UP<br/>
    --interval  : The time interval to scroll from start to end number in milliseconds. Default is 5 seconds<br/>
    --width     : The scroller panel width in px. Default is 400px<br/>
    --amount    : The amount of px to scroll for each number,e.g 0->1,1->2,2->3......Default is 250px<br/>
-   --thousandSeperator : The thousand seperator symbol,e.g ",". Default is no seperator<br/>
+   --seperatorType : The seperatorType to be used, default is NONE. Possible values are Scroller.SEPERATOR.[NONE|THOUSAND|TIME]<br/>
+   --seperator : The seperator symbol,e.g ",". Default is no seperator<br/>
    You can omit one or all the properties above. The default value is used if the property is not specified
    
 3. Start the scroller by calling scroller.start(number); Here number is the initial number to start, e.g 100
