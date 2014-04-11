@@ -207,7 +207,12 @@
 							this.table.style[key]=value;
 						}					
 					}
+				}else if(typeof css === "object"){
+					for(var prop in css){
+						this.table.style[prop]=css[prop];
+					}
 				}
+				//Else silently ignore the css
 			},
 			isUnmodifiableStyle:function(propName){
 				var unmodifiableAttributeNames=["position","overflow"];	
