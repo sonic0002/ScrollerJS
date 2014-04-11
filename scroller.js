@@ -69,7 +69,13 @@
 			this.iterate();
 		},
 		stop:function(){
-			this.div.removeChild(this.div.firstChild);
+			var firstChild=this.div.firstChild;
+			firstChild.style.visibility="hidden";
+			firstChild.style=display="none";   //DM operation performance issue, before the
+														//node is actually removed, need to first make 
+														//it invisible so that it's not affecting the 
+														//display of next node
+			this.div.removeChild(firstChild);
 			this.scrolledAmount=0;
 		},
 		iterate:function(){
@@ -150,6 +156,7 @@
 				}
 
 				//Start building UI
+				var divFragment=document.createDocumentFragment();
 				this.table=document.createElement("table");
 				this.table.className="scroller-table";
 				this.table.setAttribute("style","margin:auto;");
@@ -158,7 +165,10 @@
 				}
 				var tr=document.createElement("tr");
 				var indWidth=Math.floor(this.props.width/maxLength);
-				var thousandSeperatorCount = 4-maxLength%3;
+				var seperatorCount=0;
+				if(this.props.seperatorType!==Scroller.SEPERATOR.NONE){
+					seperatorCount = this.props.seperatorType+1-maxLength%(this.props.seperatorType);
+				}
 				for(var i=0;i<maxLength;++i){
 					var td=document.createElement("td");
 					
@@ -172,18 +182,20 @@
 					td.appendChild(scrollPanel.getPanel());
 					tr.appendChild(td);
 
-					if((i+thousandSeperatorCount)%3===0&&(i+1)<maxLength&&this.props.thousandSeperator!==""){
+					if(this.props.seperatorType!=Scroller.SEPERATOR.NONE&&
+					  (i+seperatorCount)%this.props.seperatorType===0&&(i+1)<maxLength){
 						var td=document.createElement("td");
 						var span=document.createElement("span");
 						span.className="scroller-span";
-						span.innerHTML=this.props.thousandSeperator;
+						span.innerHTML=this.props.seperator;
 						span.setAttribute("style","height:"+this.height+"px;left:0px;");
 						td.appendChild(span);
 						tr.appendChild(td);
 					}
 				}
 				this.table.appendChild(tr);
-				this.scrollPane.appendChild(this.table);
+				divFragment.appendChild(this.table);
+				this.scrollPane.appendChild(divFragment);
 
 				for(var i=0,len=this.oldCountArray.length;i<len;++i){
 					this.scrollPanelArray[i].start(this.oldCountArray[i],this.newCountArray[i]);
@@ -296,6 +308,11 @@
 				LEFT  : 3,
 				RIGHT : 4
 			},
+			SEPERATOR:{
+				NONE     : 0,
+				THOUSAND : 3,
+				TIME     : 2
+			},
 			getNewInstance:function(props){
 				numOfComponent++;
 
@@ -305,7 +322,8 @@
 				props.interval          = props.interval || 5000;
 				props.width             = props.width || 400;
 				props.amount            = props.amount || 250;
-				props.thousandSeperator = props.thousandSeperator || "";
+				props.seperatorType     = props.seperatorType || Scroller.SEPERATOR.NONE;
+				props.seperator         = props.seperator || "";
 
 				return new ScrollerImpl(props);
 			},
