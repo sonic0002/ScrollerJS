@@ -1,5 +1,8 @@
 
+.scroller-table{
+	background-color:#000;
+}
 .scroller-span{
-	color:red;
+	color:#FFF;
 	font-size:40px;
 }
