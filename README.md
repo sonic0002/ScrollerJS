@@ -30,3 +30,6 @@ It's easy to set up
 4. Scroll to the number you want by calling scroller.scrollTo(number);
 
 You can modify the style of the scroller panel by modifying the scroller.css file. The class .scroller-span is the the panel for each individual digit. More classes will be added.
+
+<h2>Websites which uses this module</h2>
+   PixelsTech : http://www.pixelstech.net/fun.php
