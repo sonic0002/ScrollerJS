@@ -13,7 +13,8 @@ It's easy to set up
   	width:200,
   	amount:80,
    seperatorType:Scroller.SEPERATOR.THOUSAND,
-   seperator:","
+   seperator:",",
+   textAlign:"right"
    });
 
    --direction : Scroll direction, currently supported direction is UP. Default is UP<br/>
@@ -22,6 +23,7 @@ It's easy to set up
    --amount    : The amount of px to scroll for each number,e.g 0->1,1->2,2->3......Default is 250px<br/>
    --seperatorType : The seperatorType to be used, default is NONE. Possible values are Scroller.SEPERATOR.[NONE|THOUSAND|TIME]<br/>
    --seperator : The seperator symbol,e.g ",". Default is no seperator<br/>
+   --textAlign : The text alignment on the scroller. It is equivalent to the CSS text-align property. Default is center aligned<br/>
    You can omit one or all the properties above. The default value is used if the property is not specified
    
 3. Start the scroller by calling scroller.start(number); Here number is the initial number to start, e.g 100
