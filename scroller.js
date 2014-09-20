@@ -45,7 +45,7 @@
 			var lastChild  = this.div.lastChild;
 			switch(this.direction){
 			case Scroller.DIRECTION.UP     : var top = parseInt(lastChild.style.top);
-			 				 if(top >0){
+			 				 if(top > 0){
 			                                	firstChild.style.top = (top - this.height - this.stepSize) + "px";
 			                                	lastChild.style.top  = (top - this.stepSize) + "px";
 			                             	 }
