@@ -44,9 +44,9 @@
 			switch(this.direction){
 			case Scroller.DIRECTION.UP     : this.div.scrollTop += this.stepSize; break;
 			case Scroller.DIRECTION.DOWN   : var lastChild  = this.div.lastChild;
-											 var firstChild = this.div.firstChild;
-											 var top = parseInt(firstChild.style.top);
-											 if(top<0){
+							 var firstChild = this.div.firstChild;
+							 var top = parseInt(firstChild.style.top);
+							 if(top<0){
 			                                	firstChild.style.top = (top + this.stepSize) + "px";
 			                                	lastChild.style.top  = (top+this.height+this.stepSize) + "px";
 			                             	 }
@@ -84,10 +84,10 @@
 			case Scroller.DIRECTION.DOWN : child = this.div.lastChild;; break; 
 			}
 			child.style.visibility="hidden";
-			child.style=display="none";   //DM operation performance issue, before the
-										  //node is actually removed, need to first make 
-										  //it invisible so that it's not affecting the 
-										  //display of next node
+			child.style=display="none";     //DM operation performance issue, before the
+						        //node is actually removed, need to first make 
+							//it invisible so that it's not affecting the 
+							//display of next node
 			this.div.removeChild(child);
 			this.scrolledAmount=0;
 		},
@@ -104,11 +104,11 @@
 				var style = "position:absolute;height:"+this.height+"px;left:0px;width:"+this.width+"px;";
 				switch(this.direction){
 				case Scroller.DIRECTION.UP   :  style += "top:"+(this.height+this.div.scrollTop)+"px;";
-												span.setAttribute("style",style);
-												this.div.appendChild(span);  
-												break;
+								span.setAttribute("style",style);
+								this.div.appendChild(span);  
+								break;
 				case Scroller.DIRECTION.DOWN :  style += "top:"+(-this.height)+"px;"; 
-												span.setAttribute("style",style);
+								span.setAttribute("style",style);
 				                                this.div.insertBefore(span,this.div.firstChild); 
 				                                break; 
 				}
