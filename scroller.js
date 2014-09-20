@@ -83,16 +83,16 @@
 			this.iterate();
 		},
 		stop:function(){
-			var child=null;
+			var child = null;
 			switch(this.direction){
 			case Scroller.DIRECTION.UP   : child = this.div.firstChild; break;
 			case Scroller.DIRECTION.DOWN : child = this.div.lastChild;; break; 
 			}
-			child.style.visibility="hidden";
-			child.style=display="none";     //DM operation performance issue, before the
-							//node is actually removed, need to first make 
-							//it invisible so that it's not affecting the 
-							//display of next node
+			child.style.visibility = "hidden";
+			child.style.display    = "none";     //DM operation performance issue, before the
+							     //node is actually removed, need to first make 
+							     //it invisible so that it's not affecting the 
+							     //display of next node
 			this.div.removeChild(child);
 			this.scrolledAmount=0;
 		},
