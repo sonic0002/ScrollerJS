@@ -1,0 +1,5 @@
+1. Consider whether to support Scroller.DIRECTION.LEFT and Scroller.DIRECTION.RIGHT
+
+2. Refactor the code to make it more scalable and maintenable
+
+3. Add more well known modes where scroller can be used in addition to TIME, THOUSAND
