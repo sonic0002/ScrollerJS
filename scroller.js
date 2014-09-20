@@ -41,14 +41,19 @@
 			return this;
 		},
 		scroll:function(){
+			var firstChild = this.div.firstChild;
+			var lastChild  = this.div.lastChild;
 			switch(this.direction){
-			case Scroller.DIRECTION.UP     : this.div.scrollTop += this.stepSize; break;
-			case Scroller.DIRECTION.DOWN   : var lastChild  = this.div.lastChild;
-							 var firstChild = this.div.firstChild;
-							 var top = parseInt(firstChild.style.top);
-							 if(top<0){
+			case Scroller.DIRECTION.UP     : var top = parseInt(lastChild.style.top);
+			 				 if(top >0){
+			                                	firstChild.style.top = (top - this.height - this.stepSize) + "px";
+			                                	lastChild.style.top  = (top - this.stepSize) + "px";
+			                             	 }
+							 break;
+			case Scroller.DIRECTION.DOWN   : var top = parseInt(firstChild.style.top);
+							 if(top < 0){
 			                                	firstChild.style.top = (top + this.stepSize) + "px";
-			                                	lastChild.style.top  = (top+this.height+this.stepSize) + "px";
+			                                	lastChild.style.top  = (top + this.height + this.stepSize) + "px";
 			                             	 }
 			                                 break;
 			default:break;
@@ -85,7 +90,7 @@
 			}
 			child.style.visibility="hidden";
 			child.style=display="none";     //DM operation performance issue, before the
-						        //node is actually removed, need to first make 
+							//node is actually removed, need to first make 
 							//it invisible so that it's not affecting the 
 							//display of next node
 			this.div.removeChild(child);
@@ -103,7 +108,7 @@
 				span.innerHTML=this.nextNum;
 				var style = "position:absolute;height:"+this.height+"px;left:0px;width:"+this.width+"px;";
 				switch(this.direction){
-				case Scroller.DIRECTION.UP   :  style += "top:"+(this.height+this.div.scrollTop)+"px;";
+				case Scroller.DIRECTION.UP   :  style += "top:"+(this.height)+"px;";
 								span.setAttribute("style",style);
 								this.div.appendChild(span);  
 								break;
@@ -210,7 +215,7 @@
 						var span=document.createElement("span");
 						span.className="scroller-span";
 						span.innerHTML=this.props.seperator;
-						span.setAttribute("style","height:"+this.height+"px;left:0px;width:"+this.width+"px;");
+						span.setAttribute("style","height:"+this.height+"px;left:0px;width:"+this.width+"px;top:0px;");
 						td.appendChild(span);
 						tr.appendChild(td);
 					}
