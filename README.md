@@ -31,5 +31,5 @@ It's easy to set up
 
 You can modify the style of the scroller panel by modifying the scroller.css file. The class .scroller-span is the the panel for each individual digit. More classes will be added.
 
-<h2>Websites which uses this module</h2>
+<h2>Websites which use this module</h2>
    PixelsTech : http://www.pixelstech.net/fun.php
