@@ -19,7 +19,7 @@
 		this.textAlign=textAlign||"center";
 		//Private variables
 		this.scrolledAmount=0;
-		this.stepSize=10;
+		this.stepSize=2;
 		this.stepInterval=0;
 		this.span=null;
 		this.step=1;
