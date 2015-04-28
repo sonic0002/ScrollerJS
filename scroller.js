@@ -1,140 +1,149 @@
 /*
- *  Copyright (c) 2014, Pi Ke, All rights reserved
+ *  Copyright (c) 2014-2015, Pi Ke, All rights reserved
  *  
  *  This is a free software
  *
  *  Author      : Pi Ke
  *  Description : A number scroller module to be embeded in your web apps
+ *  Website     : http://www.pixelstech.net
  */
 ;(function(parent){
 	//Define ScrollPanel class
-	function ScrollPanel(direction,interval,width,amount,textAlign){
+	function ScrollPanel(props){
 		this.fragment=null;
 		this.div=null;
-		this.direction=direction||null;
-		this.interval=interval||0;
-		this.amount=amount||0;
-		this.width=width||0;
-		this.height=amount||0;
-		this.textAlign=textAlign||"center";
+		this.direction=props.direction||null;
+		this.interval=props.interval||0;
+		this.amount=props.amount||0;
+		this.width=props.width||0;
+		this.height=props.amount||0;
+		this.textAlign=props.textAlign||"center";
 		//Private variables
 		this.scrolledAmount=0;
-		this.stepSize=2;
+		this.stepSize=Math.ceil((this.amount+1)*1.0/25) || 2;
 		this.stepInterval=0;
-		this.span=null;
 		this.step=1;
 		this.startNum=1;
 		this.endNum=1;
 		this.nextNum=1;
+		this.firstChild = null;
+		this.lastChild  = null;
 	}
-	ScrollPanel.prototype={
-		init:function(){
-			this.fragment=document.createDocumentFragment();
-			this.div=document.createElement("div");
-			this.div.className="scroller";
-			this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;");
-			this.span=document.createElement("span");
-			this.span.className="scroller-span";
-			this.span.setAttribute("style","position:absolute;height:"+this.height+"px;left:0px;top:0px;width:"+this.width+"px;");
-			this.div.appendChild(this.span);
-			this.fragment.appendChild(this.div);
-			return this;
-		},
-		scroll:function(){
-			var firstChild = this.div.firstChild;
-			var lastChild  = this.div.lastChild;
-			switch(this.direction){
-			case Scroller.DIRECTION.UP     : var top = parseInt(lastChild.style.top);
-			 				 if(top > 0){
-			                                	firstChild.style.top = (top - this.height - this.stepSize) + "px";
-			                                	lastChild.style.top  = (top - this.stepSize) + "px";
-			                             	 }
-							 break;
-			case Scroller.DIRECTION.DOWN   : var top = parseInt(firstChild.style.top);
-							 if(top < 0){
-			                                	firstChild.style.top = (top + this.stepSize) + "px";
-			                                	lastChild.style.top  = (top + this.height + this.stepSize) + "px";
-			                             	 }
-			                                 break;
-			default:break;
-			}
-			
-			this.scrolledAmount+=this.stepSize;
-			if(this.scrolledAmount<this.amount){
-				var that = this;
-				setTimeout(function(){that.scroll();},this.stepInterval);
-			}else{
-				this.stop();
-				this.iterate();
-			}
-		},
-		start:function(start,end){
-			this.startNum=start;
-			this.endNum=end;
-			this.nextNum=this.startNum;
-			if(start!=end){
-				this.step=(this.endNum<this.startNum)?(this.endNum+10-this.startNum):(this.endNum-this.startNum);
-			}else{
-				this.step=1;
-			}
-			this.stepInterval=Math.floor((this.interval*this.stepSize)/(this.amount*this.step));
-			this.span.innerHTML=this.startNum;
-			//Start scrolling
-			this.iterate();
-		},
-		stop:function(){
-			var child = null;
-			switch(this.direction){
-			case Scroller.DIRECTION.UP   : child = this.div.firstChild; break;
-			case Scroller.DIRECTION.DOWN : child = this.div.lastChild;; break; 
-			}
-			child.style.visibility = "hidden";
-			child.style.display    = "none";     //DM operation performance issue, before the
-							     //node is actually removed, need to first make 
-							     //it invisible so that it's not affecting the 
-							     //display of next node
-			this.div.removeChild(child);
-			this.scrolledAmount=0;
-		},
-		iterate:function(){
-			if(this.nextNum!=this.endNum){
-				if(this.nextNum==9){
-					this.nextNum=0;
-				}else{
-					this.nextNum++;
-				}
-				var span=document.createElement("span");
-				span.className="scroller-span";
-				span.innerHTML=this.nextNum;
-				var style = "position:absolute;height:"+this.height+"px;left:0px;width:"+this.width+"px;";
+	ScrollPanel.prototype=(function(){
+		return {
+			init:function(){
+				this.fragment=document.createDocumentFragment();
+				this.div=document.createElement("div");
+				this.div.className="scroller";
+				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;");
+				//Create the first child
+				this.firstChild=document.createElement("span");
+				this.firstChild.className="scroller-span";
+				this.firstChild.setAttribute("style","position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
+				this.div.appendChild(this.firstChild);
+				//Create the last child
+				this.lastChild = document.createElement("span");
+				this.lastChild.className = "scroller-span";
+				this.lastChild.setAttribute("style", "position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
 				switch(this.direction){
-				case Scroller.DIRECTION.UP   :  style += "top:"+(this.height)+"px;";
-								span.setAttribute("style",style);
-								this.div.appendChild(span);  
-								break;
-				case Scroller.DIRECTION.DOWN :  style += "top:"+(-this.height)+"px;"; 
-								span.setAttribute("style",style);
-				                                this.div.insertBefore(span,this.div.firstChild); 
-				                                break; 
+				case Scroller.DIRECTION.UP   : this.div.appendChild(this.lastChild); break;
+				case Scroller.DIRECTION.DOWN : this.div.insertBefore(this.lastChild, this.firstChild); break; 
 				}
-				this.scroll();
+				
+				this.fragment.appendChild(this.div);
+				return this;
+			},
+			start:function(start, end){
+				this.startNum = start;
+				this.endNum = end;
+				this.nextNum = this.startNum;
+				if(start!=end){
+					this.step = (this.endNum<this.startNum)?(this.endNum+10-this.startNum):(this.endNum-this.startNum);
+				}else{
+					this.step = 1;
+				}
+				this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
+				this.firstChild.innerHTML = this.startNum;
+				this.lastChild.innerHTML  = this.nextNum;
+				
+				//Iterate the counter numbers
+				this.iterate();
+			},
+			iterate:function(){
+				if(this.nextNum != this.endNum){
+					if(this.nextNum == 9){
+						this.nextNum = 0;
+					}else{
+						this.nextNum++;
+					}
+					//Swap first and last child
+					this.firstChild.innerHTML = this.lastChild.innerHTML;
+					this.lastChild.innerHTML  = this.nextNum;
+
+					//Change position
+					this.firstChild.style.top = "0px";
+
+					switch(this.direction){
+					case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
+													break;
+					case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
+					                                break; 
+					}
+					this.scroll(this.firstChild, this.lastChild);
+				}
+			},
+			scroll:function(firstChild, lastChild){
+				var firstChildStyle = firstChild.style;
+				var lastChildStyle  = lastChild.style;
+
+				var top = parseInt(lastChildStyle.top);
+				switch(this.direction){
+				case Scroller.DIRECTION.UP     : 
+				 							     if(top > 0){
+				                                	firstChildStyle.top = (top - this.height - this.stepSize) + "px";
+			                                		lastChildStyle.top  = (top - this.stepSize) + "px";
+				                             	 }
+												 break;
+				case Scroller.DIRECTION.DOWN   : 
+												 if(top < 0){
+				                                	firstChildStyle.top = (top + this.height + this.stepSize) + "px";
+				                                	lastChildStyle.top  = (top + this.stepSize) + "px";
+				                             	 }
+				                                 break;
+				default:break;
+				}
+
+				this.scrolledAmount+=this.stepSize;
+				if(this.scrolledAmount<this.amount){
+					var that = this;
+					setTimeout(function(){that.scroll(firstChild, lastChild);},this.stepInterval);
+				}else{
+					this.stop();
+					this.iterate();
+				}
+			},
+			stop:function(){
+				if(this.nextNum == this.endNum){
+					this.firstChild.innerHTML = this.lastChild.innerHTML;
+				}
+				this.scrolledAmount = 0;
+			},
+			revalidate:function(){
+				if(this.nextNum!=this.endNum){
+					this.step=(this.endNum<this.nextNum)?(this.endNum+10-this.nextNum):(this.endNum-this.nextNum);
+				}else{
+					this.step=1;
+				}
+				this.stepInterval=Math.floor((this.interval*this.stepSize)/(this.amount*this.step));
+			},
+			getPanel:function(){
+				return this.fragment;
+			},
+			setEndNum:function(endNum){
+				this.endNum=endNum;
 			}
-		},
-		revalidate:function(){
-			if(this.nextNum!=this.endNum){
-				this.step=(this.endNum<this.nextNum)?(this.endNum+10-this.nextNum):(this.endNum-this.nextNum);
-			}else{
-				this.step=1;
-			}
-			this.stepInterval=Math.floor((this.interval*this.stepSize)/(this.amount*this.step));
-		},
-		getPanel:function(){
-			return this.fragment;
-		},
-		setEndNum:function(endNum){
-			this.endNum=endNum;
-		}
-	};
+		};
+	})();
 
 	var Scroller=(function(){
 		var numOfComponent=0;
@@ -198,13 +207,9 @@
 				for(var i=0;i<maxLength;++i){
 					var td=document.createElement("td");
 					
-					var scrollPanel=new ScrollPanel(
-						this.props.direction,
-						this.props.interval,
-						indWidth,
-						this.props.amount,
-						this.props.textAlign
-					).init();
+					//Update props
+					this.props.width = indWidth;
+					var scrollPanel=new ScrollPanel(this.props).init();
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
 					tr.appendChild(td);
