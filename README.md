@@ -35,4 +35,10 @@ You can modify the style of the scroller panel by modifying the scroller.css fil
 <h2>Websites which use this module</h2>
    PixelsTech : http://www.pixelstech.net/fun.php
 
+<h2>Why this?</h2>
+1. The non compressed version is only 12KB and the minitified version is ONLY 7KB. This means you will spend less on getting more
+2. It is cross browser compatible. It has been tested on Chrome 42.0, Firefox 37.0.2, IE 11, Safari 5.1.7, Opera 29.0.
+3. It has no dependency. It doesn't any other JS framework to work.
+4. More...(Waiting for you to make itt.)
+
 <h3>We welcome pull requests to improve its performance and benefit more people.</h3>
