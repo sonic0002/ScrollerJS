@@ -25,11 +25,14 @@ It's easy to set up
    --seperator : The seperator symbol,e.g ",". Default is no seperator<br/>
    --textAlign : The text alignment on the scroller. It is equivalent to the CSS text-align property. Default is center aligned<br/>
    You can omit one or all the properties above. The default value is used if the property is not specified
-   
-3. Start the scroller by calling scroller.start(number); Here number is the initial number to start, e.g 100
-4. Scroll to the number you want by calling scroller.scrollTo(number);
+
+3. Append the scroller to the target element to display the scroller. Call scroller.appendTo(target);
+4. Start the scroller by calling scroller.start(number); Here number is the initial number to start, e.g 100
+5. Scroll to the number you want by calling scroller.scrollTo(number);
 
 You can modify the style of the scroller panel by modifying the scroller.css file. The class .scroller-span is the the panel for each individual digit. More classes will be added.
 
 <h2>Websites which use this module</h2>
    PixelsTech : http://www.pixelstech.net/fun.php
+
+<h3>We welcome pull requests to improve its performance and benefit more people.</h3>
