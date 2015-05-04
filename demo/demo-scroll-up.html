@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>Scroller Scroll Up demo</title>
+<link rel="stylesheet" type="text/css" href="../scroller.css" />
+
+</head>
+<body>
+<h1>Scroller demo page</h1>
+<h2>Random number scroll up demo</h2>
+<div id="scroller-pane">
+</div>
+<script type="text/javascript" src="../scroller.js"></script>
+<script type="text/javascript">
+var scroller=Scroller.getNewInstance({
+	direction:Scroller.DIRECTION.UP,
+	interval:3000,
+	width:400,
+	amount:50,
+	seperatorType:Scroller.SEPERATOR.THOUSAND,
+	seperator:"-"
+});
+scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green",color:"red"});
+scroller.start(1000);
+//scroller.scrollTo(19);
+setInterval(function(){
+	var num=Math.floor(Math.random()*1000000000);
+	scroller.scrollTo(num);
+},5000);
+</script>
+</body>
+</html>

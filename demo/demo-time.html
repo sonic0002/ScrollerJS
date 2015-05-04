@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>Scroller demo</title>
+<link rel="stylesheet" type="text/css" href="../scroller.css" />
+
+</head>
+<body>
+<h1>Scroller demo page</h1>
+<h2>Clock pane demo</h2>
+<div id="clock-pane">
+</div>
+<script type="text/javascript" src="../scroller.js"></script>
+<script type="text/javascript">
+var clockScroller=Scroller.getNewInstance({
+	width:200,
+	amount:40,
+	interval:600,
+	seperatorType:Scroller.SEPERATOR.TIME,
+	seperator:":"
+});
+clockScroller.appendTo(document.getElementById("clock-pane"));
+clockScroller.start("000000");
+setInterval(function(){
+	var now=new Date();
+	var hours=now.getHours();
+	var minutes=now.getMinutes();
+	var seconds=now.getSeconds();
+	hours=(hours<10)?"0"+hours:hours+"";
+	minutes=(minutes<10)?"0"+minutes:minutes+"";
+	seconds=(seconds<10)?"0"+seconds:seconds+"";
+	var timeStr=hours+minutes+seconds;
+	clockScroller.scrollTo(hours+minutes+seconds);
+},1000);
+</script>
+</body>
+</html>

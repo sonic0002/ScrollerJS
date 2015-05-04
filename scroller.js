@@ -20,7 +20,7 @@
 		this.textAlign=props.textAlign||"center";
 		//Private variables
 		this.scrolledAmount=0;
-		this.stepSize=Math.ceil((this.amount+1)*1.0/25) || 2;
+		this.stepSize=Math.ceil((this.amount+1)*1.0/15) || 2;
 		this.stepInterval=0;
 		this.step=1;
 		this.startNum=1;
@@ -35,7 +35,7 @@
 				this.fragment=document.createDocumentFragment();
 				this.div=document.createElement("div");
 				this.div.className="scroller";
-				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;");
+				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;line-height:"+this.height+"px;");
 				//Create the first child
 				this.firstChild=document.createElement("span");
 				this.firstChild.className="scroller-span";
@@ -156,6 +156,7 @@
 			this.beginNum=0;
 			this.endNum=0;
 			this.css=null;
+			this.width=this.props.width;
 			this.init(0,0);
 		}
 
@@ -199,8 +200,9 @@
 					this.setStyle(this.css);
 				}
 				var tr=document.createElement("tr");
-				var indWidth=Math.floor(this.props.width/maxLength);
+				var indWidth=Math.floor(this.width/maxLength);
 				var seperatorCount=0;
+				this.props.width = indWidth; //Set the width property
 				if(this.props.seperatorType!==Scroller.SEPERATOR.NONE){
 					seperatorCount = this.props.seperatorType+1-maxLength%(this.props.seperatorType);
 				}
@@ -208,7 +210,6 @@
 					var td=document.createElement("td");
 					
 					//Update props
-					this.props.width = indWidth;
 					var scrollPanel=new ScrollPanel(this.props).init();
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
@@ -217,11 +218,13 @@
 					if(this.props.seperatorType!=Scroller.SEPERATOR.NONE&&
 					  (i+seperatorCount)%this.props.seperatorType===0&&(i+1)<maxLength){
 						var td=document.createElement("td");
+						var div = document.createElement("div");
 						var span=document.createElement("span");
 						span.className="scroller-span";
 						span.innerHTML=this.props.seperator;
-						span.setAttribute("style","height:"+this.height+"px;left:0px;width:"+this.width+"px;top:0px;");
-						td.appendChild(span);
+						div.setAttribute("style","height:"+(this.props.amount + 10)+"px;line-height:"+this.props.amount+"px;left:0px;top:0px;vertical-align:middle;");
+						div.appendChild(span);
+						td.appendChild(div);
 						tr.appendChild(td);
 					}
 				}
