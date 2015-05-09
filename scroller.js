@@ -32,7 +32,8 @@
 		this.count = 0;
 	}
 	ScrollPanel.prototype=(function(){
-		var _isTransformSupported = false;
+		var _isTransformSupported = _detectTransformSupport("transform");
+		var _minStepInterval = "400"; //400 ms
 
 		//Check whether CSS3 transform is supported
 		function _detectTransformSupport(featureName){
@@ -168,6 +169,7 @@
 					if(_isTransformSupported){
 						_addEventListner(this.firstChild, this);
 						
+						// var durationProperty = Math.max(_minStepInterval, (this.interval/this.step))+"ms";
 						var durationProperty = (this.interval/this.step)+"ms";
 						_set(this.firstChild,"transition-duration", durationProperty);
 						_set(this.lastChild,"transition-duration", durationProperty);
@@ -175,15 +177,7 @@
 						var that = this;
 						setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);	
 					} else { //Fallback to use transitional way of moving an element
-						//Change position
-						this.firstChild.style.top = "0px";
-
-						switch(this.direction){
-						case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
-														break;
-						case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
-						                                break; 
-						}
+						this.resetPosition();
 						this.scroll(this.firstChild, this.lastChild);
 					}			
 				}
@@ -251,7 +245,9 @@
 					setTimeout(function(){
 						that.iterate();
 					}, 0);
-				} 
+				}else{
+					this.resetPosition();
+				}
 			},
 			revalidate:function(){
 				if(this._mode == Scroller.MODE.COUNTDOWN){
@@ -268,6 +264,17 @@
 					}
 				}
 				this.stepInterval=Math.floor((this.interval*this.stepSize)/(this.amount*this.step));
+			},
+			resetPosition:function(){
+				//Change position
+				this.firstChild.style.top = "0px";
+
+				switch(this.direction){
+				case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
+												break;
+				case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
+				                                break; 
+				}
 			},
 			getPanel:function(){
 				return this.fragment;
