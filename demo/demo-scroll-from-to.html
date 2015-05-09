@@ -13,7 +13,7 @@
 <script type="text/javascript">
 var scroller=Scroller.getNewInstance({
 	direction:Scroller.DIRECTION.UP,
-	interval:5000,
+	interval:2000,
 	width:200,
 	amount:50,
 	seperatorType:Scroller.SEPERATOR.THOUSAND,
@@ -21,8 +21,8 @@ var scroller=Scroller.getNewInstance({
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
 setInterval(function(){
-	scroller.scrollFromTo(10000000, 99999999);
-},8000);
+	scroller.scrollFromTo(10000000, 99399999);
+},5000);
 // scroller.scrollFromTo(10000000, 99999999);
 // scroller.scrollFromTo(99999999, 10000000);
 </script>
