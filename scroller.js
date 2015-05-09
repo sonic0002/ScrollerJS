@@ -134,6 +134,8 @@
 
 				this.scrolledAmount+=this.stepSize;
 				if(this.scrolledAmount<this.amount){
+					//Below is ensure that the last scroll will not overflow
+					this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
 					var that = this;
 					setTimeout(function(){that.scroll(firstChild, lastChild);},this.stepInterval);
 				}else{
