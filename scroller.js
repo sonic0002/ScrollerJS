@@ -33,7 +33,6 @@
 	}
 	ScrollPanel.prototype=(function(){
 		var _isTransformSupported = _detectTransformSupport("transform");
-		var _minStepInterval = "400"; //400 ms
 
 		//Check whether CSS3 transform is supported
 		function _detectTransformSupport(featureName){
@@ -66,18 +65,18 @@
 			obj.style.setProperty(type, value);
 		}
 
-		function _addEventListner(obj, that){
+		function _addEventListener(obj, that){
 			var transitions = {
                 'WebkitTransition' : 'webkitTransitionEnd',
                 'MozTransition'    : 'transitionend',
-                'OTransition'      : 'oTransitionEnd otransitionend',
+                'MSTransition'     : 'msTransitionEnd',
+                'OTransition'      : 'oTransitionEnd',
                 'transition'       : 'transitionend'
             };
-
             for(var t in transitions){
                 if(obj.style[t] !== undefined){
                     obj.addEventListener(transitions[t], function(event){
-						if(obj.style.transitionDuration != "0ms"){
+						if(obj.style.transitionDuration != "1ms"){
 							that.stop();
 						} else {
 							setTimeout(function(){
@@ -114,6 +113,8 @@
 				return this;
 			},
 			start:function(start, end){
+				start = parseInt(start);
+				end  = parseInt(end);
 				this.startNum = start;
 				this.endNum = end;
 				this.nextNum = this.startNum;
@@ -132,11 +133,11 @@
 					}
 				}
 
-				this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 				this.firstChild.innerHTML = this.startNum;
 				this.lastChild.innerHTML  = this.nextNum;
 				
 				if(_isTransformSupported){
+					this.stepInterval=Math.ceil(this.interval*1.0/this.step);
 					this.firstChild.style.top = "0px";
 
 					switch(this.direction){
@@ -146,7 +147,9 @@
 					case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
 					                                break; 
 					}
-					_set(this.firstChild,"transition-property", "transform");
+					_addEventListener(this.firstChild, this);
+				} else {
+					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 				}
 
 				//Iterate the counter numbers
@@ -173,12 +176,9 @@
 					this.lastChild.innerHTML  = this.nextNum;
 
 					if(_isTransformSupported){
-						_addEventListner(this.firstChild, this);
-						
-						// var durationProperty = Math.max(_minStepInterval, (this.interval/this.step))+"ms";
-						var durationProperty = (this.interval/this.step)+"ms";
-						_set(this.firstChild,"transition-duration", durationProperty);
-						_set(this.lastChild,"transition-duration", durationProperty);
+						var durationProperty = (this.stepInterval)+"ms";
+						_set(this.firstChild, "transition-duration", durationProperty);
+						_set(this.lastChild,  "transition-duration", durationProperty);
 						
 						var that = this;
 						setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);	
@@ -190,9 +190,11 @@
 			},
 			scroll:function(firstChild, lastChild){	
 				if(_isTransformSupported){
-					var transformProperty = "translateY("+this.amount+"px)";
-					_set(this.firstChild,"transform", transformProperty);
-					_set(this.lastChild,"transform", transformProperty);
+					var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
+															 // be fired when applied to transform.scaleY().
+					var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
+					_set(this.firstChild ,"transform", transformProperty);
+					_set(this.lastChild  ,"transform", transformProperty);
 				}else{
 					this.traditionalScroll(firstChild, lastChild);
 				}
@@ -230,32 +232,35 @@
 				}
 			},
 			stop:function(){
-				if(this.nextNum == this.endNum){
-					this.firstChild.innerHTML = this.lastChild.innerHTML;
-				}
-				this.scrolledAmount = 0;
 				if(_isTransformSupported){
-					var transformProperty = "translateY(0px)";
-					var durationProperty = "0ms";
+					var rand = 1.0 +(Math.random()/100000);
+					var transformProperty = "translateY(0px) scaleX("+rand+")";
+					var durationProperty  = "1ms";
 
 					this.firstChild.innerHTML = this.lastChild.innerHTML;
 					this.firstChild.offsetHeight;
-					this.lastChild.offsetHeight;
 
 					_set(this.firstChild,"transition-duration", durationProperty);
-					_set(this.lastChild,"transition-duration", durationProperty);
+					_set(this.lastChild ,"transition-duration", durationProperty);
 					_set(this.firstChild,"transform", transformProperty);
-					_set(this.lastChild,"transform", transformProperty);
-
-					// var that = this;
-					// setTimeout(function(){
-					// 	that.iterate();
-					// }, 0);
+					_set(this.lastChild ,"transform", transformProperty);
 				}else{
+					if(this.nextNum == this.endNum){
+						this.firstChild.innerHTML = this.lastChild.innerHTML;
+					}
 					this.resetPosition();
+					this.scrolledAmount = 0;
 				}
 			},
 			revalidate:function(){
+				this.nextNum = parseInt(this.nextNum);
+				this.endNum  = parseInt(this.endNum);
+
+				// If next number is the same as end number, do nothing
+				if(this.nextNum == this.endNum){
+					return;
+				}
+
 				if(this._mode == Scroller.MODE.COUNTDOWN){
 					if(this.nextNum!=this.endNum){
 						this.step = (this.endNum>this.nextNum)?(this.nextNum+10-this.endNum):(this.nextNum-this.endNum);
@@ -269,7 +274,12 @@
 						this.step=1;
 					}
 				}
-				this.stepInterval=Math.floor((this.interval*this.stepSize)/(this.amount*this.step));
+
+				if(_isTransformSupported){
+					this.stepInterval=Math.ceil(this.interval*1.0/this.step);
+				} else {
+					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
+				}
 			},
 			resetPosition:function(){
 				//Change position
@@ -478,7 +488,7 @@
 						scrollPanelArray[i].revalidate();
 						scrollPanelArray[i].iterate();
 					}
-				},1);	
+				},0);	
 			},
 			clear:function(){
 				while (this.scrollPane.firstChild) {
