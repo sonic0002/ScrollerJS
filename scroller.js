@@ -21,7 +21,7 @@
 		this._mode=props._mode||Scroller.MODE.COUNTUP;
 		//Private variables
 		this.scrolledAmount=0;
-		this.stepSize=Math.ceil((this.amount+1)*1.0/15) || 2;
+		this.stepSize=Math.ceil((this.amount+1)*1.0/10) || 2;
 		this.stepInterval=0;
 		this.step=1;
 		this.startNum=1;
