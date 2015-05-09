@@ -67,21 +67,27 @@
 		}
 
 		function _addEventListner(obj, that){
-			obj.addEventListener("webkitTransitionEnd", function(event){
-				if(obj.style.transitionDuration != "0ms"){
-					that.stop();
-				}
-			}, false);
-			obj.addEventListener("oTransitionEnd ", function(event){
-				if(obj.style.transitionDuration != "0ms"){
-					that.stop();
-				}
-			}, false);
-			obj.addEventListener("transitionend", function(event){
-				if(obj.style.transitionDuration != "0ms"){
-					that.stop();
-				}
-			}, false);
+			var transitions = {
+                'WebkitTransition' : 'webkitTransitionEnd',
+                'MozTransition'    : 'transitionend',
+                'OTransition'      : 'oTransitionEnd otransitionend',
+                'transition'       : 'transitionend'
+            };
+
+            for(var t in transitions){
+                if(obj.style[t] !== undefined){
+                    obj.addEventListener(transitions[t], function(event){
+						if(obj.style.transitionDuration != "0ms"){
+							that.stop();
+						} else {
+							setTimeout(function(){
+								that.iterate();
+							}, 0);
+						}
+					}, false);
+					break;
+                }
+            }
 		}
 
 		return {
@@ -241,10 +247,10 @@
 					_set(this.firstChild,"transform", transformProperty);
 					_set(this.lastChild,"transform", transformProperty);
 
-					var that = this;
-					setTimeout(function(){
-						that.iterate();
-					}, 0);
+					// var that = this;
+					// setTimeout(function(){
+					// 	that.iterate();
+					// }, 0);
 				}else{
 					this.resetPosition();
 				}
