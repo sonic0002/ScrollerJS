@@ -33,7 +33,7 @@
 	}
 	ScrollPanel.prototype=(function(){
 		var _isTransformSupported = false;
-		console.log("Is transformation supported? "+_isTransformSupported);
+
 		//Check whether CSS3 transform is supported
 		function _detectTransformSupport(featureName){
 		    var isSupported = false,
@@ -175,7 +175,6 @@
 						var that = this;
 						setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);	
 					} else { //Fallback to use transitional way of moving an element
-						console.log("In fallback mode");
 						//Change position
 						this.firstChild.style.top = "0px";
 
