@@ -76,7 +76,8 @@
             for(var t in transitions){
                 if(obj.style[t] !== undefined){
                     obj.addEventListener(transitions[t], function(event){
-						if(obj.style.transitionDuration != "1ms"){
+                    	var transitionDuration = obj.style.transitionDuration || obj.style.webkitTransitionDuration;
+						if(transitionDuration != "1ms"){
 							that.stop();
 						} else {
 							setTimeout(function(){
@@ -280,6 +281,7 @@
 				} else {
 					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 				}
+				console.log(this.stepInterval);
 			},
 			resetPosition:function(){
 				//Change position
@@ -294,6 +296,9 @@
 			},
 			getPanel:function(){
 				return this.fragment;
+			},
+			setNextNum:function(nextNum){
+				this.nextNum = nextNum;
 			},
 			setEndNum:function(endNum){
 				this.endNum=endNum;
@@ -479,11 +484,14 @@
 				this.scrollTo(to);
 			},
 			refresh:function(){
+				console.log(this.beginNum);
+				console.log(this.endNum);
 				oldCountArray=this.oldCountArray;
 				newCountArray=this.newCountArray;
 				scrollPanelArray=this.scrollPanelArray;
 				setTimeout(function(){
 					for(var i=0,len=oldCountArray.length;i<len;++i){
+						scrollPanelArray[i].setNextNum(oldCountArray[i]);
 						scrollPanelArray[i].setEndNum(newCountArray[i]);
 						scrollPanelArray[i].revalidate();
 						scrollPanelArray[i].iterate();
