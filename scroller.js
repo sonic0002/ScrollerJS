@@ -10,6 +10,7 @@
 ;(function(parent){
 	//Define ScrollPanel class
 	function ScrollPanel(props){
+		this.index = props.index||-1;
 		this.fragment=null;
 		this.div=null;
 		this.direction=props.direction||null;
@@ -18,6 +19,7 @@
 		this.width=props.width||0;
 		this.height=props.amount||0;
 		this.textAlign=props.textAlign||"center";
+		this.forceFallback = props.forceFallback || false;
 		this._mode=props._mode||Scroller.MODE.COUNTUP;
 		//Private variables
 		this.scrolledAmount=0;
@@ -65,6 +67,7 @@
 			obj.style.setProperty(type, value);
 		}
 
+		// var _debugTransitionCount = 0, _startTime = 0, _endTime = 0;
 		function _addEventListener(obj, that){
 			var transitions = {
                 'WebkitTransition' : 'webkitTransitionEnd',
@@ -82,7 +85,7 @@
 						} else {
 							setTimeout(function(){
 								that.iterate();
-							}, 0);
+							}, 1);
 						}
 					}, false);
 					break;
@@ -137,8 +140,8 @@
 				this.firstChild.innerHTML = this.startNum;
 				this.lastChild.innerHTML  = this.nextNum;
 				
-				if(_isTransformSupported){
-					this.stepInterval=Math.ceil(this.interval*1.0/this.step);
+				if(_isTransformSupported && !this.forceFallback){
+					this.stepInterval=Math.floor(this.interval*1.0/this.step);
 					this.firstChild.style.top = "0px";
 
 					switch(this.direction){
@@ -157,7 +160,15 @@
 				this.iterate();
 			},
 			iterate:function(){
-				if(this.nextNum != this.endNum){
+				if(this.nextNum != this.endNum || this.lastChild.innerHTML != this.endNum){
+					// Below check is to ensure the UI is updated properly.
+					// Sometimes when in low memory situation the nextNum 
+					// has been set to endNum, but the corresponding UI is 
+					// not updated to the endNum
+					if(this.nextNum == this.endNum){
+						this.nextNum = parseInt(this.lastChild.innerHTML);
+					}
+
 					if(this._mode == Scroller.MODE.COUNTDOWN){
 						if(this.nextNum == 0){
 							this.nextNum = 9;
@@ -176,7 +187,7 @@
 					this.firstChild.innerHTML = this.lastChild.innerHTML;
 					this.lastChild.innerHTML  = this.nextNum;
 
-					if(_isTransformSupported){
+					if(_isTransformSupported && !this.forceFallback ){
 						var durationProperty = (this.stepInterval)+"ms";
 						_set(this.firstChild, "transition-duration", durationProperty);
 						_set(this.lastChild,  "transition-duration", durationProperty);
@@ -190,7 +201,7 @@
 				}
 			},
 			scroll:function(firstChild, lastChild){	
-				if(_isTransformSupported){
+				if(_isTransformSupported && !this.forceFallback){
 					var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
 															 // be fired when applied to transform.scaleY().
 					var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
@@ -233,7 +244,7 @@
 				}
 			},
 			stop:function(){
-				if(_isTransformSupported){
+				if(_isTransformSupported && !this.forceFallback){
 					var rand = 1.0 +(Math.random()/100000);
 					var transformProperty = "translateY(0px) scaleX("+rand+")";
 					var durationProperty  = "1ms";
@@ -246,10 +257,10 @@
 					_set(this.firstChild,"transform", transformProperty);
 					_set(this.lastChild ,"transform", transformProperty);
 				}else{
-					if(this.nextNum == this.endNum){
-						this.firstChild.innerHTML = this.lastChild.innerHTML;
-					}
-					this.resetPosition();
+					// if(this.nextNum == this.endNum){
+					// 	this.firstChild.innerHTML = this.lastChild.innerHTML;
+					// }
+					// this.resetPosition();
 					this.scrolledAmount = 0;
 				}
 			},
@@ -276,12 +287,11 @@
 					}
 				}
 
-				if(_isTransformSupported){
-					this.stepInterval=Math.ceil(this.interval*1.0/this.step);
+				if(_isTransformSupported && !this.forceFallback){
+					this.stepInterval=Math.floor(this.interval*1.0/this.step);
 				} else {
 					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 				}
-				console.log(this.stepInterval);
 			},
 			resetPosition:function(){
 				//Change position
@@ -373,6 +383,7 @@
 					var td=document.createElement("td");
 					
 					//Update props
+					this.props.index = i;
 					var scrollPanel=new ScrollPanel(this.props).init();
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
@@ -484,14 +495,12 @@
 				this.scrollTo(to);
 			},
 			refresh:function(){
-				console.log(this.beginNum);
-				console.log(this.endNum);
 				oldCountArray=this.oldCountArray;
 				newCountArray=this.newCountArray;
 				scrollPanelArray=this.scrollPanelArray;
 				setTimeout(function(){
 					for(var i=0,len=oldCountArray.length;i<len;++i){
-						scrollPanelArray[i].setNextNum(oldCountArray[i]);
+						// scrollPanelArray[i].setNextNum(oldCountArray[i]);
 						scrollPanelArray[i].setEndNum(newCountArray[i]);
 						scrollPanelArray[i].revalidate();
 						scrollPanelArray[i].iterate();
@@ -533,6 +542,7 @@
 				props.seperatorType     = props.seperatorType || Scroller.SEPERATOR.NONE;
 				props.seperator         = props.seperator || "";
 				props.textAlign         = props.textAlign || "center";
+				props.forceFallback     = props.forceFallback || false;
 
 				return new ScrollerImpl(props);
 			},
