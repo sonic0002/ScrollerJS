@@ -495,17 +495,15 @@
 				this.scrollTo(to);
 			},
 			refresh:function(){
-				oldCountArray=this.oldCountArray;
-				newCountArray=this.newCountArray;
-				scrollPanelArray=this.scrollPanelArray;
+				var that = this;
 				setTimeout(function(){
-					for(var i=0,len=oldCountArray.length;i<len;++i){
+					for(var i=0,len=that.oldCountArray.length;i<len;++i){
 						// scrollPanelArray[i].setNextNum(oldCountArray[i]);
-						scrollPanelArray[i].setEndNum(newCountArray[i]);
-						scrollPanelArray[i].revalidate();
-						scrollPanelArray[i].iterate();
+						that.scrollPanelArray[i].setEndNum(that.newCountArray[i]);
+						that.scrollPanelArray[i].revalidate();
+						that.scrollPanelArray[i].iterate();
 					}
-				},0);	
+				},1);	
 			},
 			clear:function(){
 				while (this.scrollPane.firstChild) {
