@@ -10,7 +10,6 @@
 ;(function(parent){
 	//Define ScrollPanel class
 	function ScrollPanel(props){
-		this.index = props.index||-1;
 		this.fragment=null;
 		this.div=null;
 		this.direction=props.direction||null;
@@ -118,7 +117,7 @@
 			},
 			start:function(start, end){
 				start = parseInt(start);
-				end  = parseInt(end);
+				end   = parseInt(end);
 				this.startNum = start;
 				this.endNum = end;
 				this.nextNum = this.startNum;
@@ -170,17 +169,9 @@
 					}
 
 					if(this._mode == Scroller.MODE.COUNTDOWN){
-						if(this.nextNum == 0){
-							this.nextNum = 9;
-						}else{
-							this.nextNum--;
-						}
+						this.nextNum = (this.nextNum == 0)?9:(this.nextNum-1);
 					} else {
-						if(this.nextNum == 9){
-							this.nextNum = 0;
-						}else{
-							this.nextNum++;
-						}
+						this.nextNum = (this.nextNum == 9)?0:(this.nextNum+1);
 					}
 
 					//Swap first and last child
@@ -205,8 +196,8 @@
 					var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
 															 // be fired when applied to transform.scaleY().
 					var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
-					_set(this.firstChild ,"transform", transformProperty);
-					_set(this.lastChild  ,"transform", transformProperty);
+					_set(firstChild ,"transform", transformProperty);
+					_set(lastChild  ,"transform", transformProperty);
 				}else{
 					this.traditionalScroll(firstChild, lastChild);
 				}
@@ -250,17 +241,17 @@
 					var durationProperty  = "1ms";
 
 					this.firstChild.innerHTML = this.lastChild.innerHTML;
-					this.firstChild.offsetHeight;
+
+					// Sometimes when in low memory situation the nextNum 
+					// has been set to endNum, but the corresponding UI is 
+					// not updated to the endNum
+					this.nextNum = parseInt(this.lastChild.innerHTML); 
 
 					_set(this.firstChild,"transition-duration", durationProperty);
 					_set(this.lastChild ,"transition-duration", durationProperty);
 					_set(this.firstChild,"transform", transformProperty);
 					_set(this.lastChild ,"transform", transformProperty);
 				}else{
-					// if(this.nextNum == this.endNum){
-					// 	this.firstChild.innerHTML = this.lastChild.innerHTML;
-					// }
-					// this.resetPosition();
 					this.scrolledAmount = 0;
 				}
 			},
@@ -306,9 +297,6 @@
 			},
 			getPanel:function(){
 				return this.fragment;
-			},
-			setNextNum:function(nextNum){
-				this.nextNum = nextNum;
 			},
 			setEndNum:function(endNum){
 				this.endNum=endNum;
@@ -383,7 +371,6 @@
 					var td=document.createElement("td");
 					
 					//Update props
-					this.props.index = i;
 					var scrollPanel=new ScrollPanel(this.props).init();
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
@@ -498,7 +485,6 @@
 				var that = this;
 				setTimeout(function(){
 					for(var i=0,len=that.oldCountArray.length;i<len;++i){
-						// scrollPanelArray[i].setNextNum(oldCountArray[i]);
 						that.scrollPanelArray[i].setEndNum(that.newCountArray[i]);
 						that.scrollPanelArray[i].revalidate();
 						that.scrollPanelArray[i].iterate();
