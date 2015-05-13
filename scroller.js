@@ -18,6 +18,7 @@
 		this.width=props.width||0;
 		this.height=props.amount||0;
 		this.textAlign=props.textAlign||"center";
+		this.forceFallback = props.forceFallback || false;
 		this._mode=props._mode||Scroller.MODE.COUNTUP;
 		//Private variables
 		this.scrolledAmount=0;
@@ -29,8 +30,68 @@
 		this.nextNum=1;
 		this.firstChild = null;
 		this.lastChild  = null;
+		this.count = 0;
 	}
 	ScrollPanel.prototype=(function(){
+		var _isTransformSupported = _detectTransformSupport("transform");
+
+		//Check whether CSS3 transform is supported
+		function _detectTransformSupport(featureName){
+		    var isSupported = false,
+		    	domPrefixes = 'Webkit Moz ms O Khtml'.split(' '),
+		    	elm = document.createElement('div'),
+		    	featureNameCapital = null;
+
+		    featureName = featureName.toLowerCase();
+
+		    if(elm.style[featureName] !== undefined ) { isSupported = true; } 
+
+		    if(isSupported === false){
+		        featureNameCapital = featureName.charAt(0).toUpperCase() + featureName.substr(1);
+		        for( var i = 0; i < domPrefixes.length; i++ ) {
+		            if(elm.style[domPrefixes[i] + featureNameCapital ] !== undefined ) {
+		              isSupported = true;
+		              break;
+		            }
+		        }
+		    }
+		    return isSupported; 
+		}
+
+		function _set(obj, type, value){
+			obj.style.setProperty("-webkit-"+type, value);
+			obj.style.setProperty("-moz-"+type, value);
+			obj.style.setProperty("-ms-"+type, value);
+			obj.style.setProperty("-o-"+type, value);
+			obj.style.setProperty(type, value);
+		}
+
+		// var _debugTransitionCount = 0, _startTime = 0, _endTime = 0;
+		function _addEventListener(obj, that){
+			var transitions = {
+                'WebkitTransition' : 'webkitTransitionEnd',
+                'MozTransition'    : 'transitionend',
+                'MSTransition'     : 'msTransitionEnd',
+                'OTransition'      : 'oTransitionEnd',
+                'transition'       : 'transitionend'
+            };
+            for(var t in transitions){
+                if(obj.style[t] !== undefined){
+                    obj.addEventListener(transitions[t], function(event){
+                    	var transitionDuration = obj.style.transitionDuration || obj.style.webkitTransitionDuration;
+						if(transitionDuration != "1ms"){
+							that.stop();
+						} else {
+							setTimeout(function(){
+								that.iterate();
+							}, 1);
+						}
+					}, false);
+					break;
+                }
+            }
+		}
+
 		return {
 			init:function(){
 				this.fragment=document.createDocumentFragment();
@@ -55,6 +116,8 @@
 				return this;
 			},
 			start:function(start, end){
+				start = parseInt(start);
+				end   = parseInt(end);
 				this.startNum = start;
 				this.endNum = end;
 				this.nextNum = this.startNum;
@@ -73,45 +136,73 @@
 					}
 				}
 
-				this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 				this.firstChild.innerHTML = this.startNum;
 				this.lastChild.innerHTML  = this.nextNum;
 				
-				//Iterate the counter numbers
-				this.iterate();
-			},
-			iterate:function(){
-				if(this.nextNum != this.endNum){
-					if(this._mode == Scroller.MODE.COUNTDOWN){
-						if(this.nextNum == 0){
-							this.nextNum = 9;
-						}else{
-							this.nextNum--;
-						}
-					} else {
-						if(this.nextNum == 9){
-							this.nextNum = 0;
-						}else{
-							this.nextNum++;
-						}
-					}
-					//Swap first and last child
-					this.firstChild.innerHTML = this.lastChild.innerHTML;
-					this.lastChild.innerHTML  = this.nextNum;
-
-					//Change position
+				if(_isTransformSupported && !this.forceFallback){
+					this.stepInterval=Math.floor(this.interval*1.0/this.step);
 					this.firstChild.style.top = "0px";
 
 					switch(this.direction){
 					case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
+													this.amount = -this.amount;
 													break;
 					case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
 					                                break; 
 					}
-					this.scroll(this.firstChild, this.lastChild);
+					_addEventListener(this.firstChild, this);
+				} else {
+					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
+				}
+
+				//Iterate the counter numbers
+				this.iterate();
+			},
+			iterate:function(){
+				if(this.nextNum != this.endNum || this.lastChild.innerHTML != this.endNum){
+					// Below check is to ensure the UI is updated properly.
+					// Sometimes when in low memory situation the nextNum 
+					// has been set to endNum, but the corresponding UI is 
+					// not updated to the endNum
+					if(this.nextNum == this.endNum){
+						this.nextNum = parseInt(this.lastChild.innerHTML);
+					}
+
+					if(this._mode == Scroller.MODE.COUNTDOWN){
+						this.nextNum = (this.nextNum == 0)?9:(this.nextNum-1);
+					} else {
+						this.nextNum = (this.nextNum == 9)?0:(this.nextNum+1);
+					}
+
+					//Swap first and last child
+					this.firstChild.innerHTML = this.lastChild.innerHTML;
+					this.lastChild.innerHTML  = this.nextNum;
+
+					if(_isTransformSupported && !this.forceFallback ){
+						var durationProperty = (this.stepInterval)+"ms";
+						_set(this.firstChild, "transition-duration", durationProperty);
+						_set(this.lastChild,  "transition-duration", durationProperty);
+						
+						var that = this;
+						setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);	
+					} else { //Fallback to use transitional way of moving an element
+						this.resetPosition();
+						this.scroll(this.firstChild, this.lastChild);
+					}			
 				}
 			},
-			scroll:function(firstChild, lastChild){
+			scroll:function(firstChild, lastChild){	
+				if(_isTransformSupported && !this.forceFallback){
+					var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
+															 // be fired when applied to transform.scaleY().
+					var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
+					_set(firstChild ,"transform", transformProperty);
+					_set(lastChild  ,"transform", transformProperty);
+				}else{
+					this.traditionalScroll(firstChild, lastChild);
+				}
+			},
+			traditionalScroll:function(firstChild, lastChild){
 				var firstChildStyle = firstChild.style;
 				var lastChildStyle  = lastChild.style;
 
@@ -133,7 +224,7 @@
 				}
 
 				this.scrolledAmount+=this.stepSize;
-				if(this.scrolledAmount<this.amount){
+				if(this.scrolledAmount < this.amount){
 					//Below is ensure that the last scroll will not overflow
 					this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
 					var that = this;
@@ -144,12 +235,35 @@
 				}
 			},
 			stop:function(){
-				if(this.nextNum == this.endNum){
+				if(_isTransformSupported && !this.forceFallback){
+					var rand = 1.0 +(Math.random()/100000);
+					var transformProperty = "translateY(0px) scaleX("+rand+")";
+					var durationProperty  = "1ms";
+
 					this.firstChild.innerHTML = this.lastChild.innerHTML;
+
+					// Sometimes when in low memory situation the nextNum 
+					// has been set to endNum, but the corresponding UI is 
+					// not updated to the endNum
+					this.nextNum = parseInt(this.lastChild.innerHTML); 
+
+					_set(this.firstChild,"transition-duration", durationProperty);
+					_set(this.lastChild ,"transition-duration", durationProperty);
+					_set(this.firstChild,"transform", transformProperty);
+					_set(this.lastChild ,"transform", transformProperty);
+				}else{
+					this.scrolledAmount = 0;
 				}
-				this.scrolledAmount = 0;
 			},
 			revalidate:function(){
+				this.nextNum = parseInt(this.nextNum);
+				this.endNum  = parseInt(this.endNum);
+
+				// If next number is the same as end number, do nothing
+				if(this.nextNum == this.endNum){
+					return;
+				}
+
 				if(this._mode == Scroller.MODE.COUNTDOWN){
 					if(this.nextNum!=this.endNum){
 						this.step = (this.endNum>this.nextNum)?(this.nextNum+10-this.endNum):(this.nextNum-this.endNum);
@@ -163,7 +277,23 @@
 						this.step=1;
 					}
 				}
-				this.stepInterval=Math.floor((this.interval*this.stepSize)/(this.amount*this.step));
+
+				if(_isTransformSupported && !this.forceFallback){
+					this.stepInterval=Math.floor(this.interval*1.0/this.step);
+				} else {
+					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
+				}
+			},
+			resetPosition:function(){
+				//Change position
+				this.firstChild.style.top = "0px";
+
+				switch(this.direction){
+				case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
+												break;
+				case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
+				                                break; 
+				}
 			},
 			getPanel:function(){
 				return this.fragment;
@@ -352,14 +482,12 @@
 				this.scrollTo(to);
 			},
 			refresh:function(){
-				oldCountArray=this.oldCountArray;
-				newCountArray=this.newCountArray;
-				scrollPanelArray=this.scrollPanelArray;
+				var that = this;
 				setTimeout(function(){
-					for(var i=0,len=oldCountArray.length;i<len;++i){
-						scrollPanelArray[i].setEndNum(newCountArray[i]);
-						scrollPanelArray[i].revalidate();
-						scrollPanelArray[i].iterate();
+					for(var i=0,len=that.oldCountArray.length;i<len;++i){
+						that.scrollPanelArray[i].setEndNum(that.newCountArray[i]);
+						that.scrollPanelArray[i].revalidate();
+						that.scrollPanelArray[i].iterate();
 					}
 				},1);	
 			},
@@ -398,6 +526,7 @@
 				props.seperatorType     = props.seperatorType || Scroller.SEPERATOR.NONE;
 				props.seperator         = props.seperator || "";
 				props.textAlign         = props.textAlign || "center";
+				props.forceFallback     = props.forceFallback || false;
 
 				return new ScrollerImpl(props);
 			},
