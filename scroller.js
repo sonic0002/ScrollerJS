@@ -427,7 +427,7 @@
 				this.scrollPane.appendChild(divFragment);
 
 				for(var i=0,len=this.oldCountArray.length;i<len;++i){
-					this.scrollPanelArray[i].start(this.oldCountArray[i],this.newCountArray[i]);
+					this.scrollPanelArray[i].start(this.oldCountArray[i],this.oldCountArray[i]);
 				}
 			},
 			innerInit:function(maxLength){
@@ -521,13 +521,14 @@
 						this.newCountArray.push(count.charAt(i));
 					}
 				}
+
 				this.refresh();
 			},
 			scrollFromTo:function(from,to){
 				var from=(from+"").trim().replace(/,:/g,"");
 				var to = (to+"").trim().replace(/,:/g,"");
 
-				this.init(from, to);
+				this.start(from);
 				this.scrollTo(to);
 			},
 			refresh:function(){

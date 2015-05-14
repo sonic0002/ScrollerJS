@@ -17,13 +17,12 @@ var scroller=Scroller.getNewInstance({
 	width:500,
 	amount:50,
 	seperatorType:Scroller.SEPERATOR.THOUSAND,
-	seperator:".",
-	forceFallback:true
+	seperator:"."
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
 setInterval(function(){
 	scroller.scrollFromTo(10000000, 99399999);
-},5000);
+},8000);
 // scroller.scrollFromTo(10000000, 99999999);
 // scroller.scrollFromTo(99999999, 10000000);
 </script>
