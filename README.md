@@ -24,6 +24,7 @@ It's easy to set up
    --seperatorType : The seperatorType to be used, default is NONE. Possible values are Scroller.SEPERATOR.[NONE|THOUSAND|TIME]<br/>
    --seperator : The seperator symbol,e.g ",". Default is no seperator<br/>
    --textAlign : The text alignment on the scroller. It is equivalent to the CSS text-align property. Default is center aligned<br/>
+   --forceFallback : Force to use DOM animation instead of CSS transition. Default value is false.<br/>
    You can omit one or all the properties above. The default value is used if the property is not specified
 
 3. Append the scroller to the target element to display the scroller. Call scroller.appendTo(target);
