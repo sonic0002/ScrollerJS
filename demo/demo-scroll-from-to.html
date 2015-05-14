@@ -13,16 +13,19 @@
 <script type="text/javascript">
 var scroller=Scroller.getNewInstance({
 	direction:Scroller.DIRECTION.UP,
-	interval:3000,
-	width:200,
+	interval:2000,
+	width:500,
 	amount:50,
 	seperatorType:Scroller.SEPERATOR.THOUSAND,
-	seperator:"."
+	seperator:".",
+	forceFallback:true
 });
-scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green",color:"red"});
+scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
 setInterval(function(){
-	scroller.scrollFromTo(10000000, 99999999);
+	scroller.scrollFromTo(10000000, 99399999);
 },5000);
+// scroller.scrollFromTo(10000000, 99999999);
+// scroller.scrollFromTo(99999999, 10000000);
 </script>
 </body>
 </html>
