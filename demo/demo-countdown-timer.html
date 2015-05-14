@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>Scroller demo</title>
+<link rel="stylesheet" type="text/css" href="../scroller.css" />
+
+</head>
+<body>
+<h1>Scroller demo page</h1>
+<h2>Countdown timer pane demo</h2>
+<div id="clock-pane">
+</div>
+<script type="text/javascript" src="../scroller.js"></script>
+<script type="text/javascript">
+var clockScroller=Scroller.getNewInstance({
+	direction:Scroller.DIRECTION.DOWN,
+	width:200,
+	amount:40,
+	interval:600,
+	seperatorType:Scroller.SEPERATOR.TIME,
+	seperator:":"
+});
+clockScroller.appendTo(document.getElementById("clock-pane"));
+var hour = 1;
+var minute = 1;
+var second = 2;
+hour=(hour<10)?"0"+hour:hour+"";
+minute=(minute<10)?"0"+minute:minute+"";
+second=(second<10)?"0"+second:second+"";
+var timeStr=hour+minute+second;
+clockScroller.start(timeStr);
+var timeInterval = setInterval(function(){
+	hour = parseInt(hour);
+	minute = parseInt(minute);
+	second = parseInt(second);
+	if(hour==0 && minute==0 && second==0){
+		clearInterval(timeInterval);
+	}else{
+		if(second == 0){
+			if(minute == 0){
+				hour -= 1;
+				minute = 59;
+				second = 59;
+			}else{
+				minute -= 1;
+				second = 59;
+			}
+		}else{
+			second -= 1;
+		}
+		hour=(hour<10)?"0"+hour:hour+"";
+		minute=(minute<10)?"0"+minute:minute+"";
+		second=(second<10)?"0"+second:second+"";
+		var timeStr=hour+minute+second;
+		clockScroller.scrollTo(timeStr);
+	}
+},1000);
+</script>
+</body>
+</html>

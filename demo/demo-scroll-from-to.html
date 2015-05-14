@@ -17,7 +17,8 @@ var scroller=Scroller.getNewInstance({
 	width:500,
 	amount:50,
 	seperatorType:Scroller.SEPERATOR.THOUSAND,
-	seperator:"."
+	seperator:".",
+	forceFallback:true
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
 setInterval(function(){
