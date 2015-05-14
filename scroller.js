@@ -34,12 +34,8 @@
 		this.width=props.width||0;
 		this.height=props.amount||0;
 		this.textAlign=props.textAlign||"center";
-<<<<<<< HEAD
-		this.forceFallback = props.forceFallback || false;
-=======
 		this.upperBound=props.upperBound||9;
 		this.forceFallback=props.forceFallback || false;
->>>>>>> scroller-mixed-mode-version
 		this._mode=props._mode||Scroller.MODE.COUNTUP;
 		//Private variables
 		this.scrolledAmount=0;
@@ -54,65 +50,6 @@
 		this.count = 0;
 	}
 	ScrollPanel.prototype=(function(){
-		var _isTransformSupported = _detectTransformSupport("transform");
-
-		//Check whether CSS3 transform is supported
-		function _detectTransformSupport(featureName){
-		    var isSupported = false,
-		    	domPrefixes = 'Webkit Moz ms O Khtml'.split(' '),
-		    	elm = document.createElement('div'),
-		    	featureNameCapital = null;
-
-		    featureName = featureName.toLowerCase();
-
-		    if(elm.style[featureName] !== undefined ) { isSupported = true; } 
-
-		    if(isSupported === false){
-		        featureNameCapital = featureName.charAt(0).toUpperCase() + featureName.substr(1);
-		        for( var i = 0; i < domPrefixes.length; i++ ) {
-		            if(elm.style[domPrefixes[i] + featureNameCapital ] !== undefined ) {
-		              isSupported = true;
-		              break;
-		            }
-		        }
-		    }
-		    return isSupported; 
-		}
-
-		function _set(obj, type, value){
-			obj.style.setProperty("-webkit-"+type, value);
-			obj.style.setProperty("-moz-"+type, value);
-			obj.style.setProperty("-ms-"+type, value);
-			obj.style.setProperty("-o-"+type, value);
-			obj.style.setProperty(type, value);
-		}
-
-		// var _debugTransitionCount = 0, _startTime = 0, _endTime = 0;
-		function _addEventListener(obj, that){
-			var transitions = {
-                'WebkitTransition' : 'webkitTransitionEnd',
-                'MozTransition'    : 'transitionend',
-                'MSTransition'     : 'msTransitionEnd',
-                'OTransition'      : 'oTransitionEnd',
-                'transition'       : 'transitionend'
-            };
-            for(var t in transitions){
-                if(obj.style[t] !== undefined){
-                    obj.addEventListener(transitions[t], function(event){
-                    	var transitionDuration = obj.style.transitionDuration || obj.style.webkitTransitionDuration;
-						if(transitionDuration != "1ms"){
-							that.stop();
-						} else {
-							setTimeout(function(){
-								that.iterate();
-							}, 1);
-						}
-					}, false);
-					break;
-                }
-            }
-		}
-
 		return {
 			init:function(){
 				this.fragment=document.createDocumentFragment();
@@ -160,25 +97,7 @@
 				this.firstChild.innerHTML = this.startNum;
 				this.lastChild.innerHTML  = this.nextNum;
 				
-<<<<<<< HEAD
-				if(_isTransformSupported && !this.forceFallback){
-					this.stepInterval=Math.floor(this.interval*1.0/this.step);
-					this.firstChild.style.top = "0px";
-
-					switch(this.direction){
-					case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
-													this.amount = -this.amount;
-													break;
-					case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
-					                                break; 
-					}
-					_addEventListener(this.firstChild, this);
-				} else {
-					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
-				}
-=======
 				this.innerStart();
->>>>>>> scroller-mixed-mode-version
 
 				//Iterate the counter numbers
 				this.iterate();
@@ -195,108 +114,15 @@
 					}
 
 					if(this._mode == Scroller.MODE.COUNTDOWN){
-<<<<<<< HEAD
-						this.nextNum = (this.nextNum == 0)?9:(this.nextNum-1);
-					} else {
-						this.nextNum = (this.nextNum == 9)?0:(this.nextNum+1);
-=======
 						this.nextNum = (this.nextNum == 0)?this.upperBound:(this.nextNum-1);
 					} else {
 						this.nextNum = (this.nextNum == this.upperBound)?0:(this.nextNum+1);
->>>>>>> scroller-mixed-mode-version
 					}
 
 					//Swap first and last child
 					this.firstChild.innerHTML = this.lastChild.innerHTML;
 					this.lastChild.innerHTML  = this.nextNum;
 
-<<<<<<< HEAD
-					if(_isTransformSupported && !this.forceFallback ){
-						var durationProperty = (this.stepInterval)+"ms";
-						_set(this.firstChild, "transition-duration", durationProperty);
-						_set(this.lastChild,  "transition-duration", durationProperty);
-						
-						var that = this;
-						setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);	
-					} else { //Fallback to use transitional way of moving an element
-						this.resetPosition();
-						this.scroll(this.firstChild, this.lastChild);
-					}			
-				}
-			},
-			scroll:function(firstChild, lastChild){	
-				if(_isTransformSupported && !this.forceFallback){
-					var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
-															 // be fired when applied to transform.scaleY().
-					var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
-					_set(firstChild ,"transform", transformProperty);
-					_set(lastChild  ,"transform", transformProperty);
-				}else{
-					this.traditionalScroll(firstChild, lastChild);
-				}
-			},
-			traditionalScroll:function(firstChild, lastChild){
-				var firstChildStyle = firstChild.style;
-				var lastChildStyle  = lastChild.style;
-
-				var top = parseInt(lastChildStyle.top);
-				switch(this.direction){
-				case Scroller.DIRECTION.UP     : 
-				 							     if(top > 0){
-				                                	firstChildStyle.top = (top - this.height - this.stepSize) + "px";
-			                                		lastChildStyle.top  = (top - this.stepSize) + "px";
-				                             	 }
-												 break;
-				case Scroller.DIRECTION.DOWN   : 
-												 if(top < 0){
-				                                	firstChildStyle.top = (top + this.height + this.stepSize) + "px";
-				                                	lastChildStyle.top  = (top + this.stepSize) + "px";
-				                             	 }
-				                                 break;
-				default:break;
-				}
-
-				this.scrolledAmount+=this.stepSize;
-				if(this.scrolledAmount < this.amount){
-					//Below is ensure that the last scroll will not overflow
-					this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
-					var that = this;
-					setTimeout(function(){that.scroll(firstChild, lastChild);},this.stepInterval);
-				}else{
-					this.stop();
-					this.iterate();
-				}
-			},
-			stop:function(){
-				if(_isTransformSupported && !this.forceFallback){
-					var rand = 1.0 +(Math.random()/100000);
-					var transformProperty = "translateY(0px) scaleX("+rand+")";
-					var durationProperty  = "1ms";
-
-					this.firstChild.innerHTML = this.lastChild.innerHTML;
-
-					// Sometimes when in low memory situation the nextNum 
-					// has been set to endNum, but the corresponding UI is 
-					// not updated to the endNum
-					this.nextNum = parseInt(this.lastChild.innerHTML); 
-
-					_set(this.firstChild,"transition-duration", durationProperty);
-					_set(this.lastChild ,"transition-duration", durationProperty);
-					_set(this.firstChild,"transform", transformProperty);
-					_set(this.lastChild ,"transform", transformProperty);
-				}else{
-					this.scrolledAmount = 0;
-				}
-			},
-			revalidate:function(){
-				this.nextNum = parseInt(this.nextNum);
-				this.endNum  = parseInt(this.endNum);
-
-				// If next number is the same as end number, do nothing
-				if(this.nextNum == this.endNum){
-					return;
-				}
-=======
 					this.innerIterate();		
 				}
 			},
@@ -310,7 +136,6 @@
 				if(this.nextNum == this.endNum){
 					return;
 				}
->>>>>>> scroller-mixed-mode-version
 
 				if(this._mode == Scroller.MODE.COUNTDOWN){
 					if(this.nextNum!=this.endNum){
@@ -326,18 +151,9 @@
 					}
 				}
 
-<<<<<<< HEAD
-				if(_isTransformSupported && !this.forceFallback){
-					this.stepInterval=Math.floor(this.interval*1.0/this.step);
-				} else {
-					this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
-				}
-			},
-=======
 				this.innerRevalidate();
 			},
 			innerRevalidate:function(){},
->>>>>>> scroller-mixed-mode-version
 			resetPosition:function(){
 				//Change position
 				this.firstChild.style.top = "0px";
@@ -718,12 +534,9 @@
 				var that = this;
 				setTimeout(function(){
 					for(var i=0,len=that.oldCountArray.length;i<len;++i){
-<<<<<<< HEAD
-=======
 						if(that.props._mode){
 							that.scrollPanelArray[i].setMode(that.props._mode);
 						}
->>>>>>> scroller-mixed-mode-version
 						that.scrollPanelArray[i].setEndNum(that.newCountArray[i]);
 						that.scrollPanelArray[i].revalidate();
 						that.scrollPanelArray[i].iterate();
