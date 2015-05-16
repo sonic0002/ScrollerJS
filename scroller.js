@@ -36,7 +36,7 @@
 		this.textAlign=props.textAlign||"center";
 		this.upperBound=props.upperBound||9;
 		this.forceFallback=props.forceFallback || false;
-		this._mode=props._mode||Scroller.MODE.COUNTUP;
+		this.mode=props._mode||Scroller.MODE.COUNTUP;
 		//Private variables
 		this.scrolledAmount=0;
 		this.stepSize=Math.ceil((this.amount+1)*1.0/10) || 2;
@@ -113,7 +113,7 @@
 						this.nextNum = parseInt(this.lastChild.innerHTML);
 					}
 
-					if(this._mode == Scroller.MODE.COUNTDOWN){
+					if(this.mode == Scroller.MODE.COUNTDOWN){
 						this.nextNum = (this.nextNum == 0)?this.upperBound:(this.nextNum-1);
 					} else {
 						this.nextNum = (this.nextNum == this.upperBound)?0:(this.nextNum+1);
@@ -137,7 +137,7 @@
 					return;
 				}
 
-				if(this._mode == Scroller.MODE.COUNTDOWN){
+				if(this.mode == Scroller.MODE.COUNTDOWN){
 					if(this.nextNum!=this.endNum){
 						this.step = (this.endNum>this.nextNum)?(this.nextNum+(this.upperBound+1)-this.endNum):(this.nextNum-this.endNum);
 					}else{
@@ -172,7 +172,7 @@
 				this.endNum=endNum;
 			},
 			setMode:function(mode){
-				this._mode=mode;
+				this.mode=mode;
 			}
 		};
 	})();
