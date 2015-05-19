@@ -119,10 +119,6 @@
 						this.nextNum = (this.nextNum == this.upperBound)?0:(this.nextNum+1);
 					}
 
-					//Swap first and last child
-					this.firstChild.innerHTML = this.lastChild.innerHTML;
-					this.lastChild.innerHTML  = this.nextNum;
-
 					this.innerIterate();		
 				}
 			},
@@ -164,6 +160,7 @@
 				case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
 				                                break; 
 				}
+				this.firstChild.offsetHeight;
 			},
 			getPanel:function(){
 				return this.fragment;
@@ -231,6 +228,10 @@
 	};
 
 	CSSTransitionScrollPanel.prototype.innerIterate = function(){
+		//Swap first and last child
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.lastChild.innerHTML  = this.nextNum;
+
 		var durationProperty = (this.stepInterval)+"ms";
 		this._set(this.firstChild, "transition-duration", durationProperty);
 		this._set(this.lastChild,  "transition-duration", durationProperty);
@@ -280,6 +281,9 @@
 
 	DOMScrollPanel.prototype.innerIterate = function(){
 		this.resetPosition();
+		//Swap first and last child
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.lastChild.innerHTML  = this.nextNum;
 		this.scroll(this.firstChild, this.lastChild);
 	};
 
