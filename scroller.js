@@ -58,7 +58,7 @@
 				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;line-height:"+this.height+"px;");
 				
 				this.innerDiv = document.createElement("div");
-				this.innerDiv.setAttribute("style","position:absolute;width:"+this.width+"px;text-align:"+this.textAlign+";");
+				this.innerDiv.setAttribute("style","position:absolute;width:"+this.width+"px;text-align:"+this.textAlign+";top:0;");
 				//Create the first child
 				this.firstChild=document.createElement("span");
 				this.firstChild.className="scroller-span";
@@ -164,8 +164,8 @@
 			getPanel:function(){
 				return this.fragment;
 			},
-			setEndNum:function(endNum){
-				this.endNum=endNum;
+			setEndNum:function(endNumber){
+				this.endNum=endNumber;
 			},
 			setMode:function(mode){
 				this.mode=mode;
@@ -262,7 +262,7 @@
 		var that = this;
 		setTimeout(function(){
 			that.iterate();
-		}, 0);
+		}, 1);
 	};
 
 	CSSTransitionScrollPanel.prototype.innerRevalidate = function(){
@@ -272,6 +272,7 @@
 	function DOMScrollPanel(props){
 		ScrollPanel.call(this, props);
 		this.scrolledAmount=0;
+		this.scrollID=null;
 	}
 	Util.extend(ScrollPanel, DOMScrollPanel);
 
@@ -289,14 +290,11 @@
 
 	DOMScrollPanel.prototype.scroll = function(){
 		var innerDivStyle = this.innerDiv.style;
-
 		var top = parseInt(innerDivStyle.top);
 		switch(this.direction){
-		case Scroller.DIRECTION.UP     : 
-										 innerDivStyle.top = (top - this.stepSize) + "px";
+		case Scroller.DIRECTION.UP     : innerDivStyle.top = (top - this.stepSize) + "px";
 										 break;
-		case Scroller.DIRECTION.DOWN   : 
-		                                 innerDivStyle.top = (top + this.stepSize) + "px";
+		case Scroller.DIRECTION.DOWN   : innerDivStyle.top = (top + this.stepSize) + "px";
 		                                 break;
 		default:break;
 		}
@@ -306,8 +304,11 @@
 			//Below is ensure that the last scroll will not overflow
 			this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
 			var that = this;
-			setTimeout(function(){that.scroll();},this.stepInterval);
+			this.scrollID = setTimeout(function(){that.scroll();},this.stepInterval);
 		}else{
+			if(this.scrollID!=null){
+				clearTimeout(this.scrollID);
+			}
 			this.stop();
 			this.iterate();
 		}
