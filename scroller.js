@@ -28,6 +28,7 @@
 	function ScrollPanel(props){
 		this.fragment=null;
 		this.div=null;
+		this.innerDdiv=null;
 		this.direction=props.direction||null;
 		this.interval=props.interval||0;
 		this.amount=props.amount||0;
@@ -38,7 +39,6 @@
 		this.forceFallback=props.forceFallback || false;
 		this.mode=props._mode||Scroller.MODE.COUNTUP;
 		//Private variables
-		this.scrolledAmount=0;
 		this.stepSize=Math.ceil((this.amount+1)*1.0/10) || 2;
 		this.stepInterval=0;
 		this.step=1;
@@ -56,20 +56,27 @@
 				this.div=document.createElement("div");
 				this.div.className="scroller";
 				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;line-height:"+this.height+"px;");
+				
+				this.innerDiv = document.createElement("div");
+				this.innerDiv.setAttribute("style","position:absolute;width:"+this.width+"px;text-align:"+this.textAlign+";");
 				//Create the first child
 				this.firstChild=document.createElement("span");
 				this.firstChild.className="scroller-span";
-				this.firstChild.setAttribute("style","position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
-				this.div.appendChild(this.firstChild);
+				this.firstChild.setAttribute("style","position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;top:0px;width:"+this.width+"px;");
+				this.innerDiv.appendChild(this.firstChild);
 				//Create the last child
 				this.lastChild = document.createElement("span");
 				this.lastChild.className = "scroller-span";
 				this.lastChild.setAttribute("style", "position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
 				switch(this.direction){
-				case Scroller.DIRECTION.UP   : this.div.appendChild(this.lastChild); break;
-				case Scroller.DIRECTION.DOWN : this.div.insertBefore(this.lastChild, this.firstChild); break; 
+				case Scroller.DIRECTION.UP   : this.innerDiv.appendChild(this.lastChild); 
+											   this.lastChild.style.top  = this.height + "px";
+											   break;
+				case Scroller.DIRECTION.DOWN : this.innerDiv.insertBefore(this.lastChild, this.firstChild); 
+											   this.lastChild.style.top  = (-this.height) + "px";
+											   break; 
 				}
-				
+				this.div.appendChild(this.innerDiv);
 				this.fragment.appendChild(this.div);
 				return this;
 			},
@@ -80,17 +87,17 @@
 				this.endNum = end;
 				this.nextNum = this.startNum;
 
-				if(this._mode == Scroller.MODE.COUNTDOWN){
+				if(this.mode == Scroller.MODE.COUNTDOWN){
 					if(start!=end){
 						this.step = (this.endNum>this.startNum)?(this.startNum+(this.upperBound+1)-this.endNum):(this.startNum-this.endNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				} else {
 					if(start!=end){
 						this.step = (this.endNum<this.startNum)?(this.endNum+(this.upperBound+1)-this.startNum):(this.endNum-this.startNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				}
 
@@ -123,7 +130,7 @@
 				}
 			},
 			innerIterate:function(){},
-			scroll:function(firstChild, lastChild){},
+			scroll:function(){},
 			stop:function(){},
 			revalidate:function(){
 				this.nextNum = parseInt(this.nextNum);
@@ -137,13 +144,13 @@
 					if(this.nextNum!=this.endNum){
 						this.step = (this.endNum>this.nextNum)?(this.nextNum+(this.upperBound+1)-this.endNum):(this.nextNum-this.endNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				} else {
 					if(this.nextNum!=this.endNum){
 						this.step=(this.endNum<this.nextNum)?(this.endNum+(this.upperBound+1)-this.nextNum):(this.endNum-this.nextNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				}
 
@@ -151,16 +158,8 @@
 			},
 			innerRevalidate:function(){},
 			resetPosition:function(){
-				//Change position
-				this.firstChild.style.top = "0px";
-
-				switch(this.direction){
-				case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
-												break;
-				case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
-				                                break; 
-				}
-				this.firstChild.offsetHeight;
+				this.innerDiv.style.top = "0px";
+				this.innerDiv.offsetHeight;
 			},
 			getPanel:function(){
 				return this.fragment;
@@ -179,12 +178,22 @@
 	}
 	Util.extend(ScrollPanel, CSSTransitionScrollPanel);		
 
+	CSSTransitionScrollPanel.prototype._props = {};
+
 	CSSTransitionScrollPanel.prototype._set=function(obj, type, value){
-		obj.style.setProperty("-webkit-"+type, value);
-		obj.style.setProperty("-moz-"+type, value);
-		obj.style.setProperty("-ms-"+type, value);
-		obj.style.setProperty("-o-"+type, value);
-		obj.style.setProperty(type, value);
+		if(this._props[type]){
+			obj.style.setProperty(this._props[type], value);
+		}else{
+			var modes = "-webkit- -moz- -ms- -o-".split(" ");
+			CSSTransitionScrollPanel.prototype._props[type] = type;
+			for(var i=0, len = modes.length; i<len; ++i){
+            	if(obj.style[modes[i]+type] !== undefined){
+            		CSSTransitionScrollPanel.prototype._props[type] = modes[i]+type;
+            		break;
+            	}
+            }
+            this._set(obj, type, value);
+		}
 	}
 
 	// var _debugTransitionCount = 0, _startTime = 0, _endTime = 0;
@@ -200,13 +209,9 @@
             if(obj.style[t] !== undefined){
                 obj.addEventListener(transitions[t], function(event){
                 	var transitionDuration = obj.style.transitionDuration || obj.style.webkitTransitionDuration;
-					if(transitionDuration != "1ms"){
+					if(transitionDuration != "0ms"){
 						that.stop();
-					} else {
-						setTimeout(function(){
-							that.iterate();
-						}, 1);
-					}
+					} 
 				}, false);
 				break;
             }
@@ -214,17 +219,11 @@
 	}
 
 	CSSTransitionScrollPanel.prototype.innerStart = function(){
-		this.stepInterval=Math.floor(this.interval*1.0/this.step);
-		this.firstChild.style.top = "0px";
-
-		switch(this.direction){
-		case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
-										this.amount = -this.amount;
-										break;
-		case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
-		                                break; 
+		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
+		if(this.direction == Scroller.DIRECTION.UP){
+			this.amount = -this.amount;
 		}
-		this._addEventListener(this.firstChild, this);
+		this._addEventListener(this.innerDiv, this);
 	};
 
 	CSSTransitionScrollPanel.prototype.innerIterate = function(){
@@ -233,25 +232,23 @@
 		this.lastChild.innerHTML  = this.nextNum;
 
 		var durationProperty = (this.stepInterval)+"ms";
-		this._set(this.firstChild, "transition-duration", durationProperty);
-		this._set(this.lastChild,  "transition-duration", durationProperty);
-		
+		this._set(this.innerDiv, "transition-duration", durationProperty);
+
 		var that = this;
-		setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);						
+		setTimeout(function(){that.scroll();},0);						
 	};
 
-	CSSTransitionScrollPanel.prototype.scroll = function(firstChild, lastChild){
+	CSSTransitionScrollPanel.prototype.scroll = function(){
 		var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
 												 // be fired when applied to transform.scaleY().
 		var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
-		this._set(firstChild ,"transform", transformProperty);
-		this._set(lastChild  ,"transform", transformProperty);
+		this._set(this.innerDiv  ,"transform", transformProperty);
 	};
 
 	CSSTransitionScrollPanel.prototype.stop = function(){
 		var rand = 1.0 +(Math.random()/100000);
 		var transformProperty = "translateY(0px) scaleX("+rand+")";
-		var durationProperty  = "1ms";
+		var durationProperty  = "0ms";
 
 		this.firstChild.innerHTML = this.lastChild.innerHTML;
 
@@ -260,18 +257,21 @@
 		// not updated to the endNum
 		this.nextNum = parseInt(this.lastChild.innerHTML); 
 
-		this._set(this.firstChild,"transition-duration", durationProperty);
-		this._set(this.lastChild ,"transition-duration", durationProperty);
-		this._set(this.firstChild,"transform", transformProperty);
-		this._set(this.lastChild ,"transform", transformProperty);
+		this._set(this.innerDiv,"transition-duration", durationProperty);
+		this._set(this.innerDiv,"transform", transformProperty);
+		var that = this;
+		setTimeout(function(){
+			that.iterate();
+		}, 0);
 	};
 
 	CSSTransitionScrollPanel.prototype.innerRevalidate = function(){
-		this.stepInterval=Math.floor(this.interval*1.0/this.step);
+		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
 	};
 
 	function DOMScrollPanel(props){
 		ScrollPanel.call(this, props);
+		this.scrolledAmount=0;
 	}
 	Util.extend(ScrollPanel, DOMScrollPanel);
 
@@ -280,30 +280,23 @@
 	};
 
 	DOMScrollPanel.prototype.innerIterate = function(){
-		this.resetPosition();
+		// this.resetPosition();
 		//Swap first and last child
 		this.firstChild.innerHTML = this.lastChild.innerHTML;
 		this.lastChild.innerHTML  = this.nextNum;
-		this.scroll(this.firstChild, this.lastChild);
+		this.scroll();
 	};
 
-	DOMScrollPanel.prototype.scroll = function(firstChild, lastChild){
-		var firstChildStyle = firstChild.style;
-		var lastChildStyle  = lastChild.style;
+	DOMScrollPanel.prototype.scroll = function(){
+		var innerDivStyle = this.innerDiv.style;
 
-		var top = parseInt(lastChildStyle.top);
+		var top = parseInt(innerDivStyle.top);
 		switch(this.direction){
 		case Scroller.DIRECTION.UP     : 
-		 							     if(top > 0){
-		                                	firstChildStyle.top = (top - this.height - this.stepSize) + "px";
-	                                		lastChildStyle.top  = (top - this.stepSize) + "px";
-		                             	 }
+										 innerDivStyle.top = (top - this.stepSize) + "px";
 										 break;
 		case Scroller.DIRECTION.DOWN   : 
-										 if(top < 0){
-		                                	firstChildStyle.top = (top + this.height + this.stepSize) + "px";
-		                                	lastChildStyle.top  = (top + this.stepSize) + "px";
-		                             	 }
+		                                 innerDivStyle.top = (top + this.stepSize) + "px";
 		                                 break;
 		default:break;
 		}
@@ -313,7 +306,7 @@
 			//Below is ensure that the last scroll will not overflow
 			this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
 			var that = this;
-			setTimeout(function(){that.scroll(firstChild, lastChild);},this.stepInterval);
+			setTimeout(function(){that.scroll();},this.stepInterval);
 		}else{
 			this.stop();
 			this.iterate();
@@ -322,6 +315,8 @@
 
 	DOMScrollPanel.prototype.stop = function(){
 		this.scrolledAmount = 0;
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.resetPosition();
 	};
 
 	DOMScrollPanel.prototype.innerRevalidate = function(){

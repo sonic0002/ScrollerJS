@@ -12,13 +12,12 @@
 <script type="text/javascript" src="../scroller.js"></script>
 <script type="text/javascript">
 var scroller=Scroller.getNewInstance({
-	direction:Scroller.DIRECTION.UP,
+	direction:Scroller.DIRECTION.DOWN,
 	interval:2000,
 	width:500,
 	amount:50,
 	seperatorType:Scroller.SEPERATOR.THOUSAND,
-	seperator:".",
-	forceFallback:true
+	seperator:"."
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
 setInterval(function(){
