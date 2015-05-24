@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>Scroller Scroll From To demo</title>
+<link rel="stylesheet" type="text/css" href="../scroller.css" />
+</head>
+<body>
+<h2>Scroll from A to B demo with forceFallback enabled</h2>
+<p>When forceFallback is set to true, the traditional DOM way of scrolling element is used instead of the CSS transition way. If not specified, the code will detect whether 
+CSS transition is supported, if it's supported, CSS transition will be used. Otherwise,
+DOM way of scroll will be used.
+</p>
+<div id="scroller-pane">
+</div>
+<script type="text/javascript" src="../scroller.js"></script>
+<script type="text/javascript">
+var scroller=Scroller.getNewInstance({
+	direction:Scroller.DIRECTION.UP,
+	interval:2000,
+	width:500,
+	amount:50,
+	seperatorType:Scroller.SEPERATOR.THOUSAND,
+	seperator:".",
+	forceFallback:true
+});
+scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
+scroller.scrollFromTo(10000000, 99399999);
+setInterval(function(){
+	scroller.scrollFromTo(10000000, 99399999);
+},5000);
+</script>
+</body>
+</html>
