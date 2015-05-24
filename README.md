@@ -33,8 +33,11 @@ It's easy to set up
 
 You can modify the style of the scroller panel by modifying the scroller.css file. The class .scroller-span is the the panel for each individual digit. More classes will be added.
 
+<h2>Demo pages</h2>
+<a href="http://www.pixelstech.net/application/index.php?app_name=scrolljs">Demo site</a>
+
 <h2>Websites which use this module</h2>
-   PixelsTech : http://www.pixelstech.net/fun.php
+   PixelsTech : http://www.pixelstech.net
 
 <h2>Why this?</h2>
 1. The non compressed version is only 12KB and the minitified version is ONLY 7KB. This means you will spend less on getting more
