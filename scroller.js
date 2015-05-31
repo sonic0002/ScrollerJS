@@ -4,16 +4,18 @@
  *  This is a free software
  *
  *  Author      : Pi Ke
- *  Description : A number scroller module to be embeded in your web apps
+ *  Description : A number scroller module to be embedded in your web apps
  *  Website     : http://www.pixelstech.net
  */
 ;(function(parent){
 	var Util = {
+		/* Implement the inheritance logic to make it true OOP*/
 		extend:function(sup, sub){
 			sub.prototype = Object.create(sup.prototype);
 			sub.prototype.constructor = sup;
 			return sub;
 		},
+		/* Clone an object. It is a shallow clone */
 		clone:function(obj) {
 		    if (null == obj || "object" != typeof obj) return obj;
 		    var copy = obj.constructor();
@@ -24,7 +26,7 @@
 		}
 	};
 
-	//Define ScrollPanel class
+	// Define ScrollPanel super class
 	function ScrollPanel(props){
 		this.fragment=null;
 		this.div=null;
@@ -38,7 +40,7 @@
 		this.upperBound=props.upperBound||9;
 		this.forceFallback=props.forceFallback || false;
 		this.mode=props._mode||Scroller.MODE.COUNTUP;
-		//Private variables
+		// Private variables
 		this.stepSize=Math.ceil((this.amount+1)*1.0/10) || 2;
 		this.stepInterval=0;
 		this.step=1;
@@ -52,28 +54,29 @@
 	ScrollPanel.prototype=(function(){
 		return {
 			init:function(){
-				this.fragment=document.createDocumentFragment();
-				this.div=document.createElement("div");
-				this.div.className="scroller";
+				this.fragment = document.createDocumentFragment();
+				this.div = document.createElement("div");
+				this.div.className = "scroller";
 				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;line-height:"+this.height+"px;");
 				
 				this.innerDiv = document.createElement("div");
+				this.innerDiv.className = "scroller-inner-pane";
 				this.innerDiv.setAttribute("style","position:absolute;width:"+this.width+"px;text-align:"+this.textAlign+";top:0;");
-				//Create the first child
-				this.firstChild=document.createElement("span");
-				this.firstChild.className="scroller-span";
+				// Create the first child
+				this.firstChild = document.createElement("span");
+				this.firstChild.className = "scroller-span";
 				this.firstChild.setAttribute("style","position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;top:0px;width:"+this.width+"px;");
 				this.innerDiv.appendChild(this.firstChild);
-				//Create the last child
+				// Create the last child
 				this.lastChild = document.createElement("span");
 				this.lastChild.className = "scroller-span";
 				this.lastChild.setAttribute("style", "position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
 				switch(this.direction){
 				case Scroller.DIRECTION.UP   : this.innerDiv.appendChild(this.lastChild); 
-											   this.lastChild.style.top  = this.height + "px";
+											   this.lastChild.style.top = this.height + "px";
 											   break;
 				case Scroller.DIRECTION.DOWN : this.innerDiv.insertBefore(this.lastChild, this.firstChild); 
-											   this.lastChild.style.top  = (-this.height) + "px";
+											   this.lastChild.style.top = (-this.height) + "px";
 											   break; 
 				}
 				this.div.appendChild(this.innerDiv);
@@ -106,10 +109,10 @@
 				
 				this.innerStart();
 
-				//Iterate the counter numbers
+				// Iterate the counter numbers
 				this.iterate();
 			},
-			innerStart:function(){},
+			innerStart:function(){/* To be implemented by subclasses */},
 			iterate:function(){
 				if(this.nextNum != this.endNum || this.lastChild.innerHTML != this.endNum){
 					// Below check is to ensure the UI is updated properly.
@@ -129,9 +132,9 @@
 					this.innerIterate();		
 				}
 			},
-			innerIterate:function(){},
-			scroll:function(){},
-			stop:function(){},
+			innerIterate:function(){/* To be implemented by subclasses */},
+			scroll:function(){/* To be implemented by subclasses */},
+			stop:function(){/* To be implemented by subclasses */},
 			revalidate:function(){
 				this.nextNum = parseInt(this.nextNum);
 				this.endNum  = parseInt(this.endNum);
@@ -156,7 +159,7 @@
 
 				this.innerRevalidate();
 			},
-			innerRevalidate:function(){},
+			innerRevalidate:function(){/* To be implemented by subclasses */},
 			resetPosition:function(){
 				this.innerDiv.style.top = "0px";
 				this.innerDiv.offsetHeight;
@@ -173,6 +176,7 @@
 		};
 	})();
 
+	// Create subclass CSSTransitionScrollPanel
 	function CSSTransitionScrollPanel(props){
 		ScrollPanel.call(this, props);
 	}
@@ -196,7 +200,7 @@
 		}
 	}
 
-	// var _debugTransitionCount = 0, _startTime = 0, _endTime = 0;
+	// Add event listener to each scroll pane
 	CSSTransitionScrollPanel.prototype._addEventListener=function(obj, that){
 		var transitions = {
             'WebkitTransition' : 'webkitTransitionEnd',
@@ -227,9 +231,11 @@
 	};
 
 	CSSTransitionScrollPanel.prototype.innerIterate = function(){
-		//Swap first and last child
+		// Swap first and last child
 		this.firstChild.innerHTML = this.lastChild.innerHTML;
 		this.lastChild.innerHTML  = this.nextNum;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
 
 		var durationProperty = (this.stepInterval)+"ms";
 		this._set(this.innerDiv, "transition-duration", durationProperty);
@@ -251,6 +257,8 @@
 		var durationProperty  = "0ms";
 
 		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
 
 		// Sometimes when in low memory situation the nextNum 
 		// has been set to endNum, but the corresponding UI is 
@@ -259,6 +267,17 @@
 
 		this._set(this.innerDiv,"transition-duration", durationProperty);
 		this._set(this.innerDiv,"transform", transformProperty);
+		
+		// Here cannot use transitionend event is because the 
+		// transition duration is set to 0ms which may not trigger 
+		// the transitionend event in some browsers. 
+		// Initially the transition duration was set to 1ms so that 
+		// we can rely on the transitionend event to trigger next 
+		// iteration. But the scroll pane will have some flashing 
+		// effects which is not what we expected.
+		// One disadvantage of this approach is that it has some 
+		// jump ship effects as it doesn't wait the transition to 
+		// completes to trigger next iteration.
 		var that = this;
 		setTimeout(function(){
 			that.iterate();
@@ -269,6 +288,7 @@
 		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
 	};
 
+	// Create subclass DOMScrollPanel
 	function DOMScrollPanel(props){
 		ScrollPanel.call(this, props);
 		this.scrolledAmount=0;
@@ -281,10 +301,11 @@
 	};
 
 	DOMScrollPanel.prototype.innerIterate = function(){
-		// this.resetPosition();
-		//Swap first and last child
+		// Swap first and last child
 		this.firstChild.innerHTML = this.lastChild.innerHTML;
 		this.lastChild.innerHTML  = this.nextNum;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
 		this.scroll();
 	};
 
@@ -301,7 +322,7 @@
 
 		this.scrolledAmount+=this.stepSize;
 		if(this.scrolledAmount < this.amount){
-			//Below is ensure that the last scroll will not overflow
+			// Below is ensure that the last scroll will not overflow
 			this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
 			var that = this;
 			this.scrollID = setTimeout(function(){that.scroll();},this.stepInterval);
@@ -324,11 +345,12 @@
 		this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 	};
 
-	//ScrollPanelFactory
+	// ScrollPanelFactory to create ScrollPanels
 	var ScrollPanelFactory = (function(){
 		var _isTransformSupported = _detectTransformSupport("transform");
 
-		//Check whether CSS3 transform is supported
+		// Check whether CSS3 transform is supported. This is a one time check
+		// performed above.
 		function _detectTransformSupport(featureName){
 		    var isSupported = false,
 		    	domPrefixes = 'Webkit Moz ms O Khtml'.split(' '),
@@ -363,6 +385,8 @@
 	})();
 
 	var Scroller=(function(){
+		// Watch how many Scroller instances created.
+		// Just for statistic purpose
 		var numOfComponent=0;
 		
 		function ScrollerImpl(props){
@@ -395,7 +419,7 @@
 					this.newCountArray.push(end.charAt(i));
 				}
 
-				//Do necessary padding
+				// Do necessary padding
 				var diff=Math.abs(beginLength-endLength);
 				var maxLength=Math.max(beginLength,endLength);
 				if(beginLength>endLength){
@@ -408,7 +432,7 @@
 					}
 				}
 
-				//Start building UI
+				// Start building UI
 				var divFragment=document.createDocumentFragment();
 				this.table=document.createElement("table");
 				this.table.className="scroller-table";
@@ -439,7 +463,7 @@
 				for(var i=0;i<maxLength;++i){
 					var td=document.createElement("td");
 					
-					//Update props
+					// Update props
 					var scrollPanel=ScrollPanelFactory.createScrollPanel(this.props).init();
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
@@ -449,6 +473,7 @@
 					  (i+seperatorCount)%this.props.seperatorType===0&&(i+1)<maxLength){
 						var td=document.createElement("td");
 						var div = document.createElement("div");
+						div.className = "scroller-separator-pane";
 						var span=document.createElement("span");
 						span.className="scroller-span";
 						span.innerHTML=this.props.seperator;
@@ -467,7 +492,7 @@
 			getScrollPanels:function(){
 				return this.scrollPanelArray;
 			},
-			//Here style should be JavaScript format
+			// Here style should be JavaScript format
 			setStyle:function(css){
 				this.css=css;
 				if(typeof css === "string"){
@@ -486,7 +511,7 @@
 						this.table.style[prop]=css[prop];
 					}
 				}
-				//Else silently ignore the css
+				// Else silently ignore the css
 			},
 			isUnmodifiableStyle:function(propName){
 				var unmodifiableAttributeNames=["position","overflow"];	
@@ -551,7 +576,7 @@
 			}
 		};
 
-		//Time ScrollerImpl
+		// Time ScrollerImpl to extend the ScrollerImpl
 		function TimeScrollerImpl(props){
 			ScrollerImpl.call(this, props);
 		}
@@ -570,7 +595,7 @@
 						props.upperBound = 5;
 					}
 				}
-				//Update props
+				// Update props
 				var scrollPanel=ScrollPanelFactory.createScrollPanel(props).init();
 				this.scrollPanelArray.push(scrollPanel);
 				td.appendChild(scrollPanel.getPanel());
@@ -591,6 +616,7 @@
 			this.table.appendChild(tr);
 		};
 
+		// ScrollerImplFactory to create different ScrollerImpl
 		var ScrollerImplFactory = (function(){
 			return {
 				createScrollerImpl:function(props){
@@ -626,7 +652,7 @@
 			getNewInstance:function(props){
 				numOfComponent++;
 
-				//Sanitize properties
+				// Sanitize properties
 				props                   = props || {};
 				props.direction         = props.direction || Scroller.DIRECTION.UP;
 				props.interval          = props.interval || 5000;
@@ -645,6 +671,6 @@
 		};
 	})();
 
-	//Export the components
+	// Export the Scroller object
 	parent.Scroller=Scroller;
 })(window); 

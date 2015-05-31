@@ -20,9 +20,11 @@ var scroller=Scroller.getNewInstance({
 	seperator:"."
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green",color:"red"});
-setInterval(function(){
+var count = 0;
+var interId = setInterval(function(){
 	scroller.scrollFromTo(999999, 34567);
 },5000);
+// scroller.scrollFromTo(999999, 34567);
 </script>
 </body>
 </html>
