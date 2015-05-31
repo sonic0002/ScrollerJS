@@ -12,8 +12,8 @@ It's easy to set up
   	interval:3000,
   	width:200,
   	amount:80,
-   seperatorType:Scroller.SEPERATOR.THOUSAND,
-   seperator:",",
+   separatorType:Scroller.SEPARATOR.THOUSAND,
+   separator:",",
    textAlign:"right"
    });
 
@@ -21,8 +21,8 @@ It's easy to set up
    --interval  : The time interval to scroll from start to end number in milliseconds. Default is 5 seconds<br/>
    --width     : The scroller panel width in px. Default is 400px<br/>
    --amount    : The amount of px to scroll for each number,e.g 0->1,1->2,2->3......Default is 250px<br/>
-   --seperatorType : The seperatorType to be used, default is NONE. Possible values are Scroller.SEPERATOR.[NONE|THOUSAND|TIME]<br/>
-   --seperator : The seperator symbol,e.g ",". Default is no seperator<br/>
+   --separatorType : The separatorType to be used, default is NONE. Possible values are Scroller.SEPARATOR.[NONE|THOUSAND|TIME]<br/>
+   --separator : The seperator symbol,e.g ",". Default is no separator<br/>
    --textAlign : The text alignment on the scroller. It is equivalent to the CSS text-align property. Default is center aligned<br/>
    --forceFallback : Force to use DOM animation instead of CSS transition. Default value is false.<br/>
    You can omit one or all the properties above. The default value is used if the property is not specified
@@ -34,7 +34,7 @@ It's easy to set up
 You can modify the style of the scroller panel by modifying the scroller.css file. The class .scroller-span is the the panel for each individual digit. More classes will be added.
 
 <h2>Demo pages</h2>
-<a href="http://www.pixelstech.net/application/index.php?app_name=scrolljs">Demo site</a>
+<a href="http://scrollerjs.pixelstech.net">Demo site</a>
 
 <h2>Websites which use this module</h2>
    PixelsTech : http://www.pixelstech.net

@@ -19,8 +19,8 @@ var scroller=Scroller.getNewInstance({
 	interval:3000,
 	width:200,
 	amount:50,
-	seperatorType:Scroller.SEPERATOR.THOUSAND,
-	seperator:"-"
+	separatorType:Scroller.SEPARATOR.THOUSAND,
+	separator:"-"
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green",color:"red"});
 scroller.start(1000);
@@ -33,8 +33,8 @@ var clockScroller=Scroller.getNewInstance({
 	width:200,
 	amount:40,
 	interval:800,
-	seperatorType:Scroller.SEPERATOR.TIME,
-	seperator:":"
+	separatorType:Scroller.SEPARATOR.TIME,
+	separator:":"
 });
 clockScroller.appendTo(document.getElementById("clock-pane"));
 clockScroller.start("000000");

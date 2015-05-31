@@ -455,9 +455,9 @@
 				}
 			},
 			innerInit:function(maxLength){
-				var seperatorCount=0;
-				if(this.props.seperatorType!==Scroller.SEPERATOR.NONE){
-					seperatorCount = this.props.seperatorType+1-maxLength%(this.props.seperatorType);
+				var separatorCount=0;
+				if(this.props.separatorType!==Scroller.SEPARATOR.NONE){
+					separatorCount = this.props.separatorType+1-maxLength%(this.props.separatorType);
 				}
 				var tr=document.createElement("tr");
 				for(var i=0;i<maxLength;++i){
@@ -469,14 +469,14 @@
 					td.appendChild(scrollPanel.getPanel());
 					tr.appendChild(td);
 
-					if(this.props.seperatorType!=Scroller.SEPERATOR.NONE&&
-					  (i+seperatorCount)%this.props.seperatorType===0&&(i+1)<maxLength){
+					if(this.props.separatorType!=Scroller.SEPARATOR.NONE&&
+					  (i+separatorCount)%this.props.separatorType===0&&(i+1)<maxLength){
 						var td=document.createElement("td");
 						var div = document.createElement("div");
 						div.className = "scroller-separator-pane";
 						var span=document.createElement("span");
 						span.className="scroller-span";
-						span.innerHTML=this.props.seperator;
+						span.innerHTML=this.props.separator;
 						div.setAttribute("style","height:"+(this.props.amount + 10)+"px;line-height:"+this.props.amount+"px;left:0px;top:0px;vertical-align:middle;");
 						div.appendChild(span);
 						td.appendChild(div);
@@ -582,7 +582,7 @@
 		}
 		Util.extend(ScrollerImpl, TimeScrollerImpl);
 		TimeScrollerImpl.prototype.innerInit = function(maxLength){
-			var seperatorCount = this.props.seperatorType+1-maxLength%(this.props.seperatorType);
+			var separatorCount = this.props.separatorType+1-maxLength%(this.props.separatorType);
 			var tr=document.createElement("tr");
 			for(var i=0;i<maxLength;++i){
 				var td=document.createElement("td");
@@ -601,12 +601,12 @@
 				td.appendChild(scrollPanel.getPanel());
 				tr.appendChild(td);
 
-				if((i+seperatorCount)%props.seperatorType===0&&(i+1)<maxLength){
+				if((i+separatorCount)%props.separatorType===0&&(i+1)<maxLength){
 					var td=document.createElement("td");
 					var div = document.createElement("div");
 					var span=document.createElement("span");
 					span.className="scroller-span";
-					span.innerHTML=props.seperator;
+					span.innerHTML=props.separator;
 					div.setAttribute("style","height:"+(props.amount + 10)+"px;line-height:"+props.amount+"px;left:0px;top:0px;vertical-align:middle;");
 					div.appendChild(span);
 					td.appendChild(div);
@@ -621,11 +621,11 @@
 			return {
 				createScrollerImpl:function(props){
 					var obj = null;
-					switch(props.seperatorType){
-					case Scroller.SEPERATOR.TIME :
+					switch(props.separatorType){
+					case Scroller.SEPARATOR.TIME :
 						obj = new TimeScrollerImpl(props);
 						break;
-					case  Scroller.SEPERATOR.THOUSAND:
+					case  Scroller.SEPARATOR.THOUSAND:
 					default :
 						obj = new ScrollerImpl(props);
 						break;
@@ -640,7 +640,7 @@
 				UP    : 1,
 				DOWN  : 2
 			},
-			SEPERATOR:{
+			SEPARATOR:{
 				NONE     : 0,
 				TIME     : 2,
 				THOUSAND : 3
@@ -658,8 +658,8 @@
 				props.interval          = props.interval || 5000;
 				props.width             = props.width || 400;
 				props.amount            = props.amount || 250;
-				props.seperatorType     = props.seperatorType || Scroller.SEPERATOR.NONE;
-				props.seperator         = props.seperator || "";
+				props.separatorType     = props.separatorType || Scroller.SEPARATOR.NONE;
+				props.separator         = props.separator || "";
 				props.textAlign         = props.textAlign || "center";
 				props.forceFallback     = props.forceFallback || false;
 
