@@ -81,8 +81,12 @@
 				}
 				this.div.appendChild(this.innerDiv);
 				this.fragment.appendChild(this.div);
+
+				this.innerInit();
+
 				return this;
 			},
+			innerInit:function(){/* To be implemented by subclasses */},
 			start:function(start, end){
 				start = parseInt(start);
 				end   = parseInt(end);
@@ -184,14 +188,23 @@
 
 	CSSTransitionScrollPanel.prototype._props = {};
 
+	CSSTransitionScrollPanel.prototype._cssPropMap = {
+		"transition-timing-function" : "TransitionTimingFunction",
+		"transition-duration"        : "TransitionDuration",
+		"transform"					 : "Transform"
+	};
+
 	CSSTransitionScrollPanel.prototype._set=function(obj, type, value){
 		if(this._props[type]){
-			obj.style.setProperty(this._props[type], value);
+			obj.style.setProperty(this._props[type], value, "important");
 		}else{
 			var modes = "-webkit- -moz- -ms- -o-".split(" ");
 			CSSTransitionScrollPanel.prototype._props[type] = type;
 			for(var i=0, len = modes.length; i<len; ++i){
-            	if(obj.style[modes[i]+type] !== undefined){
+				var mode = modes[i].replace(/-/g,"");
+				mode = (mode == "moz") ? "Moz" : mode;
+				var jsStyleProp = mode+CSSTransitionScrollPanel.prototype._cssPropMap[type];
+            	if(obj.style[jsStyleProp] !== undefined){
             		CSSTransitionScrollPanel.prototype._props[type] = modes[i]+type;
             		break;
             	}
@@ -222,12 +235,16 @@
         }
 	}
 
+	CSSTransitionScrollPanel.prototype.innerInit = function(){
+		this._addEventListener(this.innerDiv, this);
+		this._set(this.innerDiv, "transition-timing-function", "linear");
+	};
+
 	CSSTransitionScrollPanel.prototype.innerStart = function(){
 		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
 		if(this.direction == Scroller.DIRECTION.UP){
 			this.amount = -this.amount;
 		}
-		this._addEventListener(this.innerDiv, this);
 	};
 
 	CSSTransitionScrollPanel.prototype.innerIterate = function(){
@@ -237,9 +254,6 @@
 		// Ensure UI repaint
 		this.lastChild.offsetHeight;
 
-		var durationProperty = (this.stepInterval)+"ms";
-		this._set(this.innerDiv, "transition-duration", durationProperty);
-
 		var that = this;
 		setTimeout(function(){that.scroll();},0);						
 	};
@@ -248,7 +262,9 @@
 		var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
 												 // be fired when applied to transform.scaleY().
 		var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
-		this._set(this.innerDiv  ,"transform", transformProperty);
+		var durationProperty = (this.stepInterval)+"ms";
+		this._set(this.innerDiv, "transition-duration", durationProperty);
+		this._set(this.innerDiv, "transform", transformProperty);
 	};
 
 	CSSTransitionScrollPanel.prototype.stop = function(){

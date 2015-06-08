@@ -12,8 +12,8 @@
 <script type="text/javascript" src="../scroller.js"></script>
 <script type="text/javascript">
 var scroller=Scroller.getNewInstance({
-	direction:Scroller.DIRECTION.DOWN,
-	interval:2000,
+	direction:Scroller.DIRECTION.UP,
+	interval:3000,
 	width:500,
 	amount:50,
 	separatorType:Scroller.SEPARATOR.THOUSAND,
@@ -21,8 +21,8 @@ var scroller=Scroller.getNewInstance({
 });
 scroller.appendTo(document.getElementById("scroller-pane")).setStyle({backgroundColor:"green"});
 setInterval(function(){
-	scroller.scrollFromTo(10000000, 99399999);
-},5000);
+	scroller.scrollFromTo(10000000, 99999999);
+},4000);
 // scroller.scrollFromTo(10000000, 99999999);
 // scroller.scrollFromTo(99999999, 10000000);
 </script>
