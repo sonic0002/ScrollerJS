@@ -4,16 +4,18 @@
  *  This is a free software
  *
  *  Author      : Pi Ke
- *  Description : A number scroller module to be embeded in your web apps
+ *  Description : A number scroller module to be embedded in your web apps
  *  Website     : http://www.pixelstech.net
  */
 ;(function(parent){
 	var Util = {
+		/* Implement the inheritance logic to make it true OOP*/
 		extend:function(sup, sub){
 			sub.prototype = Object.create(sup.prototype);
 			sub.prototype.constructor = sup;
 			return sub;
 		},
+		/* Clone an object. It is a shallow clone */
 		clone:function(obj) {
 		    if (null == obj || "object" != typeof obj) return obj;
 		    var copy = obj.constructor();
@@ -21,13 +23,31 @@
 		        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
 		    }
 		    return copy;
+		},
+		/* Find CSS3 animation keyframes */
+		findKeyframeRules:function(styles, func) {
+			var rules = styles.cssRules || styles.rules || [];
+
+			for(var i=0; i<rules.length; i++) {
+				var rule = rules[i];
+
+				if(rule.type == CSSRule.IMPORT_RULE) {
+					findKeyframeRules(rule.styleSheet, func);
+				}
+				else if(rule.type === CSSRule.KEYFRAMES_RULE ||
+						rule.type === CSSRule.MOZ_KEYFRAMES_RULE ||
+						rule.type === CSSRule.WEBKIT_KEYFRAMES_RULE) {
+					func(rule, styles, i);
+				}
+			}
 		}
 	};
 
-	//Define ScrollPanel class
+	// Define ScrollPanel super class
 	function ScrollPanel(props){
 		this.fragment=null;
 		this.div=null;
+		this.innerDdiv=null;
 		this.direction=props.direction||null;
 		this.interval=props.interval||0;
 		this.amount=props.amount||0;
@@ -36,9 +56,8 @@
 		this.textAlign=props.textAlign||"center";
 		this.upperBound=props.upperBound||9;
 		this.forceFallback=props.forceFallback || false;
-		this._mode=props._mode||Scroller.MODE.COUNTUP;
-		//Private variables
-		this.scrolledAmount=0;
+		this.mode=props._mode||Scroller.MODE.COUNTUP;
+		// Private variables
 		this.stepSize=Math.ceil((this.amount+1)*1.0/10) || 2;
 		this.stepInterval=0;
 		this.step=1;
@@ -50,29 +69,67 @@
 		this.count = 0;
 	}
 	ScrollPanel.prototype=(function(){
+		var _props = [];
+		var _cssPropMap = {
+			"transition-timing-function" : "TransitionTimingFunction",
+			"transition-duration"        : "TransitionDuration",
+			"transform"					 : "Transform",
+			"animation"                  : "Animation"
+		};
+		
 		return {
+			_set : function(obj, type, value){
+				if(_props[type]){
+					obj.style.setProperty(_props[type], value);
+				}else{
+					var modes = "-webkit- -moz- -ms- -o-".split(" ");
+					_props[type] = type;
+					for(var i=0, len = modes.length; i<len; ++i){
+						var mode = modes[i].replace(/-/g,"");
+						mode = (mode == "moz") ? "Moz" : mode;
+						var jsStyleProp = mode+_cssPropMap[type];
+						if(obj.style[jsStyleProp] !== undefined){
+							_props[type] = modes[i]+type;
+							break;
+						}
+					}
+					this._set(obj, type, value);
+				}
+			},
 			init:function(){
-				this.fragment=document.createDocumentFragment();
-				this.div=document.createElement("div");
-				this.div.className="scroller";
+				this.fragment = document.createDocumentFragment();
+				this.div = document.createElement("div");
+				this.div.className = "scroller";
 				this.div.setAttribute("style","position:relative;overflow:hidden;width:"+this.width+"px;text-align:"+this.textAlign+";height:"+(this.height)+"px;line-height:"+this.height+"px;");
-				//Create the first child
-				this.firstChild=document.createElement("span");
-				this.firstChild.className="scroller-span";
-				this.firstChild.setAttribute("style","position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
-				this.div.appendChild(this.firstChild);
-				//Create the last child
+				
+				this.innerDiv = document.createElement("div");
+				this.innerDiv.className = "scroller-inner-pane";
+				this.innerDiv.setAttribute("style","position:absolute;width:"+this.width+"px;text-align:"+this.textAlign+";top:0;");
+				// Create the first child
+				this.firstChild = document.createElement("span");
+				this.firstChild.className = "scroller-span";
+				this.firstChild.setAttribute("style","position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;top:0px;width:"+this.width+"px;");
+				this.innerDiv.appendChild(this.firstChild);
+				// Create the last child
 				this.lastChild = document.createElement("span");
 				this.lastChild.className = "scroller-span";
 				this.lastChild.setAttribute("style", "position:absolute;height:"+this.height+"px;line-height:"+this.height+"px;left:0px;width:"+this.width+"px;");
 				switch(this.direction){
-				case Scroller.DIRECTION.UP   : this.div.appendChild(this.lastChild); break;
-				case Scroller.DIRECTION.DOWN : this.div.insertBefore(this.lastChild, this.firstChild); break; 
+				case Scroller.DIRECTION.UP   : this.innerDiv.appendChild(this.lastChild); 
+											   this.lastChild.style.top = this.height + "px";
+											   break;
+				case Scroller.DIRECTION.DOWN : this.innerDiv.insertBefore(this.lastChild, this.firstChild); 
+											   this.lastChild.style.top = (-this.height) + "px";
+											   break; 
 				}
-				
+				this.div.appendChild(this.innerDiv);
 				this.fragment.appendChild(this.div);
+
+				this.innerInit();
+
 				return this;
 			},
+			innerInit:function(){/* To be implemented by subclasses */},
 			start:function(start, end){
 				start = parseInt(start);
 				end   = parseInt(end);
@@ -80,17 +137,17 @@
 				this.endNum = end;
 				this.nextNum = this.startNum;
 
-				if(this._mode == Scroller.MODE.COUNTDOWN){
+				if(this.mode == Scroller.MODE.COUNTDOWN){
 					if(start!=end){
 						this.step = (this.endNum>this.startNum)?(this.startNum+(this.upperBound+1)-this.endNum):(this.startNum-this.endNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				} else {
 					if(start!=end){
 						this.step = (this.endNum<this.startNum)?(this.endNum+(this.upperBound+1)-this.startNum):(this.endNum-this.startNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				}
 
@@ -99,10 +156,10 @@
 				
 				this.innerStart();
 
-				//Iterate the counter numbers
+				// Iterate the counter numbers
 				this.iterate();
 			},
-			innerStart:function(){},
+			innerStart:function(){/* To be implemented by subclasses */},
 			iterate:function(){
 				if(this.nextNum != this.endNum || this.lastChild.innerHTML != this.endNum){
 					// Below check is to ensure the UI is updated properly.
@@ -113,22 +170,18 @@
 						this.nextNum = parseInt(this.lastChild.innerHTML);
 					}
 
-					if(this._mode == Scroller.MODE.COUNTDOWN){
+					if(this.mode == Scroller.MODE.COUNTDOWN){
 						this.nextNum = (this.nextNum == 0)?this.upperBound:(this.nextNum-1);
 					} else {
 						this.nextNum = (this.nextNum == this.upperBound)?0:(this.nextNum+1);
 					}
 
-					//Swap first and last child
-					this.firstChild.innerHTML = this.lastChild.innerHTML;
-					this.lastChild.innerHTML  = this.nextNum;
-
 					this.innerIterate();		
 				}
 			},
-			innerIterate:function(){},
-			scroll:function(firstChild, lastChild){},
-			stop:function(){},
+			innerIterate:function(){/* To be implemented by subclasses */},
+			scroll:function(){/* To be implemented by subclasses */},
+			stop:function(){/* To be implemented by subclasses */},
 			revalidate:function(){
 				this.nextNum = parseInt(this.nextNum);
 				this.endNum  = parseInt(this.endNum);
@@ -137,60 +190,243 @@
 					return;
 				}
 
-				if(this._mode == Scroller.MODE.COUNTDOWN){
+				if(this.mode == Scroller.MODE.COUNTDOWN){
 					if(this.nextNum!=this.endNum){
 						this.step = (this.endNum>this.nextNum)?(this.nextNum+(this.upperBound+1)-this.endNum):(this.nextNum-this.endNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				} else {
 					if(this.nextNum!=this.endNum){
 						this.step=(this.endNum<this.nextNum)?(this.endNum+(this.upperBound+1)-this.nextNum):(this.endNum-this.nextNum);
 					}else{
-						this.step = 1;
+						this.step = Number.MAX_VALUE;
 					}
 				}
 
 				this.innerRevalidate();
 			},
-			innerRevalidate:function(){},
+			innerRevalidate:function(){/* To be implemented by subclasses */},
 			resetPosition:function(){
-				//Change position
-				this.firstChild.style.top = "0px";
-
-				switch(this.direction){
-				case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
-												break;
-				case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
-				                                break; 
-				}
+				this.innerDiv.style.top = "0px";
+				this.innerDiv.offsetHeight;
 			},
 			getPanel:function(){
 				return this.fragment;
 			},
-			setEndNum:function(endNum){
-				this.endNum=endNum;
+			setEndNum:function(endNumber){
+				this.endNum=endNumber;
 			},
 			setMode:function(mode){
-				this._mode=mode;
+				this.mode=mode;
 			}
 		};
 	})();
+	// Create subclass CSSAnimationScrollPanel
+	function CSSAnimationScrollPanel(props){
+		ScrollPanel.call(this, props);
 
+		if(this.direction == Scroller.DIRECTION.UP){
+			this.amount = -this.amount;
+		}
+		this.animationName = this._createAnimation(this.amount).name;
+	}
+	Util.extend(ScrollPanel, CSSAnimationScrollPanel);
+	
+	// Below classes about setting CSS3 animation keyframes are 
+	// based on https://github.com/jlongster/css-animations.js.
+    function KeyframeRule(r) {
+        this.original = r;
+        this.keyText = r.keyText;
+        this.css = {};
+
+        // Extract the CSS as an object
+        var rules = r.style.cssText.split(';');
+
+        for(var i=0; i<rules.length; i++) {
+            var parts = rules[i].split(':');
+
+            if(parts.length == 2) {
+                var key = parts[0].replace(/^\s+|\s+$/g, '');
+                var value = parts[1].replace(/^\s+|\s+$/g, '');
+
+                this.css[key] = value;
+            }
+        }
+    };
+
+    function KeyframeAnimation(kf) {
+        this.original = kf;
+        this.name = kf.name;
+        this.keyframes = [];
+        this.keytexts = [];
+        this.keyframeHash = {};
+
+        this.initKeyframes();
+    };
+
+    KeyframeAnimation.prototype.initKeyframes = function() {
+        this.keyframes = [];
+        this.keytexts = [];
+        this.keyframeHash = {};
+
+        var rules = this.original;
+
+        for(var i=0; i<rules.cssRules.length; i++) {
+            var rule = new KeyframeRule(rules.cssRules[i]);
+            this.keyframes.push(rule);
+            this.keytexts.push(rule.keyText);
+            this.keyframeHash[rule.keyText] = rule;
+        }
+    };
+
+    KeyframeAnimation.prototype.setKeyframe = function(text, css) {
+        var cssRule = text+" {";
+        for(var k in css) {
+            cssRule += k + ':' + css[k] + ';';
+        }
+        cssRule += "}";
+
+        // The latest spec says that it should be appendRule, not insertRule.
+        // Browsers also vary in the semantics of this, whether or not the new
+        // rules are merged in with previous ones at the same keyframe or if they
+        // are simply replaced. Need to look into that more.
+        // 
+        // https://github.com/jlongster/css-animations.js/issues/4
+        if('appendRule' in this.original) {
+            this.original.appendRule(cssRule);
+        } else {
+            this.original.insertRule(cssRule);
+        }
+
+        this.initKeyframes();
+        
+        // allow for chaining for ease of creation.
+        return this;
+    };
+
+    function Animations() {
+        this.animations = {};
+		
+        var styles = document.styleSheets;
+        var anims = this.animations;
+		
+        for(var i=0; i<styles.length; i++) {
+            try {
+                findKeyframeRules(styles[i], function(rule) {
+                    anims[rule.name] = new KeyframeAnimation(rule);
+                });
+            } catch(e) {
+                // Trying to interrogate a stylesheet from another
+                // domain will throw a security error
+            }
+        }
+    }
+
+    Animations.prototype.getDynamicSheet = function() {
+        if(!this.dynamicSheet) {
+            var style = document.createElement('style');
+            style.rel = 'stylesheet';
+            style.type = 'text/css';
+            document.getElementsByTagName('head')[0].appendChild(style);
+            this.dynamicSheet = style.sheet;
+        }
+
+        return this.dynamicSheet;
+    };
+
+    Animations.prototype.create = function(name) {
+        var anim = null;
+		var styles = this.getDynamicSheet();
+
+        if(!name) {
+            name = 'anim' + Math.floor(Math.random() * 100000);
+        }
+
+        // Append a empty animation to the end of the stylesheet
+		var modes = ["-webkit-","-moz-","-ms-","-o-",""];
+		for(var i=0, len = modes.length; i<len; ++i){
+			try {
+				var idx = styles.insertRule('@'+modes[i]+'keyframes ' + name + '{}',
+											styles.cssRules.length);
+				anim = new KeyframeAnimation(styles.cssRules[idx]);
+				this.animations[name] = anim;
+				break;
+			} catch (e) {
+				// IGNORE
+			}
+		}
+		
+        return anim;
+    };
+
+	CSSAnimationScrollPanel.prototype._createAnimation = function(value){
+		var anim = new Animations().create();
+		anim.setKeyframe('0%', {'top': '0px'});
+		anim.setKeyframe('100%', {'top': ""+value+"px"});
+		return anim;
+	};
+	
+	CSSAnimationScrollPanel.prototype._addEventListener = function(obj, type, that){
+		var pfx = ["webkit", "moz", "MS", "o", ""];
+		for (var p = 0; p < pfx.length; p++) {
+			if (!pfx[p]) type = type.toLowerCase();
+			obj.addEventListener(pfx[p]+type, function(){
+				that.stop();
+				setTimeout(function(){
+					that.iterate();
+				}, 0);
+			}, false);
+		}
+	};
+	
+	CSSAnimationScrollPanel.prototype.innerInit = function(){
+		this._addEventListener(this.innerDiv, "AnimationEnd", this);
+	};
+
+	CSSAnimationScrollPanel.prototype.innerStart = function(){
+		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
+	};
+
+	CSSAnimationScrollPanel.prototype.innerIterate = function(){
+		// Swap first and last child
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.lastChild.innerHTML  = this.nextNum;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
+
+		var that = this;
+		setTimeout(function(){that.scroll();},0);						
+	};
+
+	CSSAnimationScrollPanel.prototype.scroll = function(){
+		this._set(this.innerDiv, "animation", ""+this.animationName+" "+this.stepInterval+"ms 1");
+	};
+
+	CSSAnimationScrollPanel.prototype.stop = function(){
+		this._set(this.innerDiv, "animation", "");
+		
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
+
+		// Sometimes when in low memory situation the nextNum 
+		// has been set to endNum, but the corresponding UI is 
+		// not updated to the endNum
+		this.nextNum = parseInt(this.lastChild.innerHTML); 
+	};
+
+	CSSAnimationScrollPanel.prototype.innerRevalidate = function(){
+		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
+	};
+	
+	// Create subclass CSSTransitionScrollPanel
 	function CSSTransitionScrollPanel(props){
 		ScrollPanel.call(this, props);
 	}
 	Util.extend(ScrollPanel, CSSTransitionScrollPanel);		
 
-	CSSTransitionScrollPanel.prototype._set=function(obj, type, value){
-		obj.style.setProperty("-webkit-"+type, value);
-		obj.style.setProperty("-moz-"+type, value);
-		obj.style.setProperty("-ms-"+type, value);
-		obj.style.setProperty("-o-"+type, value);
-		obj.style.setProperty(type, value);
-	}
-
-	// var _debugTransitionCount = 0, _startTime = 0, _endTime = 0;
+	// Add event listener to each scroll pane
 	CSSTransitionScrollPanel.prototype._addEventListener=function(obj, that){
 		var transitions = {
             'WebkitTransition' : 'webkitTransitionEnd',
@@ -203,74 +439,89 @@
             if(obj.style[t] !== undefined){
                 obj.addEventListener(transitions[t], function(event){
                 	var transitionDuration = obj.style.transitionDuration || obj.style.webkitTransitionDuration;
-					if(transitionDuration != "1ms"){
+					if(transitionDuration != "0ms"){
 						that.stop();
-					} else {
-						setTimeout(function(){
-							that.iterate();
-						}, 1);
-					}
+					} 
 				}, false);
 				break;
             }
         }
 	}
 
-	CSSTransitionScrollPanel.prototype.innerStart = function(){
-		this.stepInterval=Math.floor(this.interval*1.0/this.step);
-		this.firstChild.style.top = "0px";
+	CSSTransitionScrollPanel.prototype.innerInit = function(){
+		this._addEventListener(this.innerDiv, this);
+		this._set(this.innerDiv, "transition-timing-function", "linear");
+	};
 
-		switch(this.direction){
-		case Scroller.DIRECTION.UP   :  this.lastChild.style.top  = this.height + "px";
-										this.amount = -this.amount;
-										break;
-		case Scroller.DIRECTION.DOWN :  this.lastChild.style.top  = (-this.height) + "px";
-		                                break; 
+	CSSTransitionScrollPanel.prototype.innerStart = function(){
+		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
+		if(this.direction == Scroller.DIRECTION.UP){
+			this.amount = -this.amount;
 		}
-		this._addEventListener(this.firstChild, this);
 	};
 
 	CSSTransitionScrollPanel.prototype.innerIterate = function(){
-		var durationProperty = (this.stepInterval)+"ms";
-		this._set(this.firstChild, "transition-duration", durationProperty);
-		this._set(this.lastChild,  "transition-duration", durationProperty);
-		
+		// Swap first and last child
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.lastChild.innerHTML  = this.nextNum;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
+
 		var that = this;
-		setTimeout(function(){that.scroll(that.firstChild, that.lastChild);},0);						
+		setTimeout(function(){that.scroll();},0);						
 	};
 
-	CSSTransitionScrollPanel.prototype.scroll = function(firstChild, lastChild){
+	CSSTransitionScrollPanel.prototype.scroll = function(){
 		var rand = 1.0 +(Math.random()/100000);  // This ensures "transitionend" event will always
 												 // be fired when applied to transform.scaleY().
 		var transformProperty = "translateY("+this.amount+"px) scaleX("+rand+")";
-		this._set(firstChild ,"transform", transformProperty);
-		this._set(lastChild  ,"transform", transformProperty);
+		var durationProperty = (this.stepInterval)+"ms";
+		this._set(this.innerDiv, "transition-duration", durationProperty);
+		this._set(this.innerDiv, "transform", transformProperty);
 	};
 
 	CSSTransitionScrollPanel.prototype.stop = function(){
 		var rand = 1.0 +(Math.random()/100000);
 		var transformProperty = "translateY(0px) scaleX("+rand+")";
-		var durationProperty  = "1ms";
+		var durationProperty  = "0ms";
 
 		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
 
 		// Sometimes when in low memory situation the nextNum 
 		// has been set to endNum, but the corresponding UI is 
 		// not updated to the endNum
 		this.nextNum = parseInt(this.lastChild.innerHTML); 
 
-		this._set(this.firstChild,"transition-duration", durationProperty);
-		this._set(this.lastChild ,"transition-duration", durationProperty);
-		this._set(this.firstChild,"transform", transformProperty);
-		this._set(this.lastChild ,"transform", transformProperty);
+		this._set(this.innerDiv,"transition-duration", durationProperty);
+		this._set(this.innerDiv,"transform", transformProperty);
+		
+		// Here cannot use transitionend event is because the 
+		// transition duration is set to 0ms which may not trigger 
+		// the transitionend event in some browsers. 
+		// Initially the transition duration was set to 1ms so that 
+		// we can rely on the transitionend event to trigger next 
+		// iteration. But the scroll pane will have some flashing 
+		// effects which is not what we expected.
+		// One disadvantage of this approach is that it has some 
+		// jump ship effects as it doesn't wait the transition to 
+		// completes to trigger next iteration.
+		var that = this;
+		setTimeout(function(){
+			that.iterate();
+		}, 1);
 	};
 
 	CSSTransitionScrollPanel.prototype.innerRevalidate = function(){
-		this.stepInterval=Math.floor(this.interval*1.0/this.step);
+		this.stepInterval=Math.max(1, Math.floor(this.interval*1.0/this.step));
 	};
 
+	// Create subclass DOMScrollPanel
 	function DOMScrollPanel(props){
 		ScrollPanel.call(this, props);
+		this.scrolledAmount=0;
+		this.scrollID=null;
 	}
 	Util.extend(ScrollPanel, DOMScrollPanel);
 
@@ -279,38 +530,35 @@
 	};
 
 	DOMScrollPanel.prototype.innerIterate = function(){
-		this.resetPosition();
-		this.scroll(this.firstChild, this.lastChild);
+		// Swap first and last child
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.lastChild.innerHTML  = this.nextNum;
+		// Ensure UI repaint
+		this.lastChild.offsetHeight;
+		this.scroll();
 	};
 
-	DOMScrollPanel.prototype.scroll = function(firstChild, lastChild){
-		var firstChildStyle = firstChild.style;
-		var lastChildStyle  = lastChild.style;
-
-		var top = parseInt(lastChildStyle.top);
+	DOMScrollPanel.prototype.scroll = function(){
+		var innerDivStyle = this.innerDiv.style;
+		var top = parseInt(innerDivStyle.top);
 		switch(this.direction){
-		case Scroller.DIRECTION.UP     : 
-		 							     if(top > 0){
-		                                	firstChildStyle.top = (top - this.height - this.stepSize) + "px";
-	                                		lastChildStyle.top  = (top - this.stepSize) + "px";
-		                             	 }
+		case Scroller.DIRECTION.UP     : innerDivStyle.top = (top - this.stepSize) + "px";
 										 break;
-		case Scroller.DIRECTION.DOWN   : 
-										 if(top < 0){
-		                                	firstChildStyle.top = (top + this.height + this.stepSize) + "px";
-		                                	lastChildStyle.top  = (top + this.stepSize) + "px";
-		                             	 }
+		case Scroller.DIRECTION.DOWN   : innerDivStyle.top = (top + this.stepSize) + "px";
 		                                 break;
 		default:break;
 		}
 
 		this.scrolledAmount+=this.stepSize;
 		if(this.scrolledAmount < this.amount){
-			//Below is ensure that the last scroll will not overflow
+			// Below is ensure that the last scroll will not overflow
 			this.stepSize = Math.min(this.stepSize, (this.amount - this.scrolledAmount));
 			var that = this;
-			setTimeout(function(){that.scroll(firstChild, lastChild);},this.stepInterval);
+			this.scrollID = setTimeout(function(){that.scroll();},this.stepInterval);
 		}else{
+			if(this.scrollID!=null){
+				clearTimeout(this.scrollID);
+			}
 			this.stop();
 			this.iterate();
 		}
@@ -318,17 +566,21 @@
 
 	DOMScrollPanel.prototype.stop = function(){
 		this.scrolledAmount = 0;
+		this.firstChild.innerHTML = this.lastChild.innerHTML;
+		this.resetPosition();
 	};
 
 	DOMScrollPanel.prototype.innerRevalidate = function(){
 		this.stepInterval=Math.ceil((this.interval*this.stepSize)/(this.amount*this.step));
 	};
 
-	//ScrollPanelFactory
+	// ScrollPanelFactory to create ScrollPanels
 	var ScrollPanelFactory = (function(){
+		var _isAnimationSupported = _detectTransformSupport("animation");
 		var _isTransformSupported = _detectTransformSupport("transform");
 
-		//Check whether CSS3 transform is supported
+		// Check whether CSS3 transform is supported. This is a one time check
+		// performed above.
 		function _detectTransformSupport(featureName){
 		    var isSupported = false,
 		    	domPrefixes = 'Webkit Moz ms O Khtml'.split(' '),
@@ -353,9 +605,13 @@
 
 		return {
 			createScrollPanel : function(props){
-				if(_isTransformSupported && !props.forceFallback){
-					return new CSSTransitionScrollPanel(props);
-				}else{
+				if(!props.forceFallback){
+					if(_isAnimationSupported){
+						return new CSSAnimationScrollPanel(props);
+					} else if(_isTransformSupported){
+						return new CSSTransitionScrollPanel(props);
+					} 
+				} else {
 					return new DOMScrollPanel(props);
 				}
 			}
@@ -363,6 +619,8 @@
 	})();
 
 	var Scroller=(function(){
+		// Watch how many Scroller instances created.
+		// Just for statistic purpose
 		var numOfComponent=0;
 		
 		function ScrollerImpl(props){
@@ -395,7 +653,7 @@
 					this.newCountArray.push(end.charAt(i));
 				}
 
-				//Do necessary padding
+				// Do necessary padding
 				var diff=Math.abs(beginLength-endLength);
 				var maxLength=Math.max(beginLength,endLength);
 				if(beginLength>endLength){
@@ -408,7 +666,7 @@
 					}
 				}
 
-				//Start building UI
+				// Start building UI
 				var divFragment=document.createDocumentFragment();
 				this.table=document.createElement("table");
 				this.table.className="scroller-table";
@@ -431,27 +689,28 @@
 				}
 			},
 			innerInit:function(maxLength){
-				var seperatorCount=0;
-				if(this.props.seperatorType!==Scroller.SEPERATOR.NONE){
-					seperatorCount = this.props.seperatorType+1-maxLength%(this.props.seperatorType);
+				var separatorCount=0;
+				if(this.props.separatorType!==Scroller.SEPARATOR.NONE){
+					separatorCount = this.props.separatorType+1-maxLength%(this.props.separatorType);
 				}
 				var tr=document.createElement("tr");
 				for(var i=0;i<maxLength;++i){
 					var td=document.createElement("td");
 					
-					//Update props
+					// Update props
 					var scrollPanel=ScrollPanelFactory.createScrollPanel(this.props).init();
 					this.scrollPanelArray.push(scrollPanel);
 					td.appendChild(scrollPanel.getPanel());
 					tr.appendChild(td);
 
-					if(this.props.seperatorType!=Scroller.SEPERATOR.NONE&&
-					  (i+seperatorCount)%this.props.seperatorType===0&&(i+1)<maxLength){
+					if(this.props.separatorType!=Scroller.SEPARATOR.NONE&&
+					  (i+separatorCount)%this.props.separatorType===0&&(i+1)<maxLength){
 						var td=document.createElement("td");
 						var div = document.createElement("div");
+						div.className = "scroller-separator-pane";
 						var span=document.createElement("span");
 						span.className="scroller-span";
-						span.innerHTML=this.props.seperator;
+						span.innerHTML=this.props.separator;
 						div.setAttribute("style","height:"+(this.props.amount + 10)+"px;line-height:"+this.props.amount+"px;left:0px;top:0px;vertical-align:middle;");
 						div.appendChild(span);
 						td.appendChild(div);
@@ -467,7 +726,7 @@
 			getScrollPanels:function(){
 				return this.scrollPanelArray;
 			},
-			//Here style should be JavaScript format
+			// Here style should be JavaScript format
 			setStyle:function(css){
 				this.css=css;
 				if(typeof css === "string"){
@@ -486,7 +745,7 @@
 						this.table.style[prop]=css[prop];
 					}
 				}
-				//Else silently ignore the css
+				// Else silently ignore the css
 			},
 			isUnmodifiableStyle:function(propName){
 				var unmodifiableAttributeNames=["position","overflow"];	
@@ -551,13 +810,13 @@
 			}
 		};
 
-		//Time ScrollerImpl
+		// Time ScrollerImpl to extend the ScrollerImpl
 		function TimeScrollerImpl(props){
 			ScrollerImpl.call(this, props);
 		}
 		Util.extend(ScrollerImpl, TimeScrollerImpl);
 		TimeScrollerImpl.prototype.innerInit = function(maxLength){
-			var seperatorCount = this.props.seperatorType+1-maxLength%(this.props.seperatorType);
+			var separatorCount = this.props.separatorType+1-maxLength%(this.props.separatorType);
 			var tr=document.createElement("tr");
 			for(var i=0;i<maxLength;++i){
 				var td=document.createElement("td");
@@ -570,18 +829,18 @@
 						props.upperBound = 5;
 					}
 				}
-				//Update props
+				// Update props
 				var scrollPanel=ScrollPanelFactory.createScrollPanel(props).init();
 				this.scrollPanelArray.push(scrollPanel);
 				td.appendChild(scrollPanel.getPanel());
 				tr.appendChild(td);
 
-				if((i+seperatorCount)%props.seperatorType===0&&(i+1)<maxLength){
+				if((i+separatorCount)%props.separatorType===0&&(i+1)<maxLength){
 					var td=document.createElement("td");
 					var div = document.createElement("div");
 					var span=document.createElement("span");
 					span.className="scroller-span";
-					span.innerHTML=props.seperator;
+					span.innerHTML=props.separator;
 					div.setAttribute("style","height:"+(props.amount + 10)+"px;line-height:"+props.amount+"px;left:0px;top:0px;vertical-align:middle;");
 					div.appendChild(span);
 					td.appendChild(div);
@@ -591,15 +850,16 @@
 			this.table.appendChild(tr);
 		};
 
+		// ScrollerImplFactory to create different ScrollerImpl
 		var ScrollerImplFactory = (function(){
 			return {
 				createScrollerImpl:function(props){
 					var obj = null;
-					switch(props.seperatorType){
-					case Scroller.SEPERATOR.TIME :
+					switch(props.separatorType){
+					case Scroller.SEPARATOR.TIME :
 						obj = new TimeScrollerImpl(props);
 						break;
-					case  Scroller.SEPERATOR.THOUSAND:
+					case  Scroller.SEPARATOR.THOUSAND:
 					default :
 						obj = new ScrollerImpl(props);
 						break;
@@ -614,7 +874,7 @@
 				UP    : 1,
 				DOWN  : 2
 			},
-			SEPERATOR:{
+			SEPARATOR:{
 				NONE     : 0,
 				TIME     : 2,
 				THOUSAND : 3
@@ -626,14 +886,14 @@
 			getNewInstance:function(props){
 				numOfComponent++;
 
-				//Sanitize properties
+				// Sanitize properties
 				props                   = props || {};
 				props.direction         = props.direction || Scroller.DIRECTION.UP;
 				props.interval          = props.interval || 5000;
 				props.width             = props.width || 400;
 				props.amount            = props.amount || 250;
-				props.seperatorType     = props.seperatorType || Scroller.SEPERATOR.NONE;
-				props.seperator         = props.seperator || "";
+				props.separatorType     = props.separatorType || Scroller.SEPARATOR.NONE;
+				props.separator         = props.separator || "";
 				props.textAlign         = props.textAlign || "center";
 				props.forceFallback     = props.forceFallback || false;
 
@@ -645,6 +905,6 @@
 		};
 	})();
 
-	//Export the components
+	// Export the Scroller object
 	parent.Scroller=Scroller;
 })(window); 
