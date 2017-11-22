@@ -576,7 +576,7 @@
 				var that = this;
 				setTimeout(function(){
 					for(var i=0,len=that.oldCountArray.length;i<len;++i){
-						if(that.props._mode){
+						if(that.props._mode !== undefined){
 							that.scrollPanelArray[i].setMode(that.props._mode);
 						}
 						that.scrollPanelArray[i].setEndNum(that.newCountArray[i]);
